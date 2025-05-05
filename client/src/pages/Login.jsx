@@ -1,14 +1,32 @@
 import React from "react";
-import { Button, Form, Input } from "antd";
-import { Link } from "react-router-dom";
+import { Button, Form, Input, message } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { LoginUser } from "../api/user";
 
 function Login() {
+  const navigate = useNavigate();
+
+  const onFinish = async (values) => {
+    console.log(values);
+    try {
+      const response = await LoginUser(values);
+      if (response.success) {
+        message.success(response.message);
+        navigate("/");
+      } else {
+        message.error(response.message);
+      }
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
   return (
     <>
       <div className="App-header">
         <h1>Login to BookMyShow</h1>
         <section className="mw-500 text-center px-3">
-          <Form layout="vertical">
+          <Form layout="vertical" onFinish={onFinish}>
             <Form.Item
               label="Email"
               htmlFor="email"
