@@ -1,5 +1,7 @@
 const express = require("express");
 const User = require("../models/userModel");
+const jwt = require("jsonwebtoken");
+
 const userRouter = express.Router();
 // Register a user
 userRouter.post("/register", async (req, res) => {
@@ -33,15 +35,20 @@ userRouter.post("/login", async (req, res) => {
     }
     // Simplified password validation (assuming passwords are stored in plain text,
     // which is not recommended)
-    if (req.body.password !== user.password) {
-      return res.send({
-        success: false,
-        message: "Sorry, invalid password entered!",
-      });
-    }
+    // if (req.body.password !== user.password) {
+    //   return res.send({
+    //     success: false,
+    //     message: "Sorry, invalid password entered!",
+    //   });
+    // }
+    const token = jwt.sign({ userId: user._id }, process.env.jwt_secret, {
+      expiresIn: "1d",
+    });
+
     res.send({
       success: true,
-      message: "You've successfully logged in!",
+      message: "User logged in!",
+      data: token,
     });
   } catch (error) {
     console.error(error);
