@@ -49,7 +49,7 @@ const login = async (req, res) => {
 };
 
 const getCurrentUser = async (req, res) => {
-  const user = await User.findById(req.body.userId).select("-password"); //this will not include password in response object
+  const user = await User.findById(req.userId).select("-password"); //this will not include password in response object
 
   res.send({
     success: true,
