@@ -70,6 +70,7 @@ const ProtectedRoute = ({ children }) => {
       dispatch(setUser(response.data));
     } catch (error) {
       dispatch(setUser(null));
+      navigate("/login");
       message.error(error.message);
     } finally {
       dispatch(hideLoading());
