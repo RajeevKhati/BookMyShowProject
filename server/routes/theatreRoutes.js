@@ -16,9 +16,9 @@ theatreRouter.put("/update-theatre", updateTheatre);
 theatreRouter.delete("/delete-theatre/:theatreId", deleteTheatre);
 
 // Get all theatres for Admin route
-router.get("/get-all-theatres", getAllTheatres);
+theatreRouter.get("/get-all-theatres", getAllTheatres);
 
 // Get the theatres of a specific owner
-router.get("/get-all-theatres-by-owner/:ownerId", getAllTheatresByOwner);
+theatreRouter.get("/get-all-theatres-by-owner/:ownerId", getAllTheatresByOwner);
 
 module.exports = theatreRouter;

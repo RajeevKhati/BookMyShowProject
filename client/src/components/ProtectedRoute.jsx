@@ -20,14 +20,17 @@ const ProtectedRoute = ({ children }) => {
 
   const navItems = [
     {
+      key: "home",
       label: "Home",
       icon: <HomeOutlined />,
     },
     {
+      key: "user",
       label: `${user ? user.name : ""}`,
       icon: <UserOutlined />,
       children: [
         {
+          key: "profile",
           label: (
             <span
               onClick={() => {
@@ -46,6 +49,7 @@ const ProtectedRoute = ({ children }) => {
           icon: <ProfileOutlined />,
         },
         {
+          key: "logout",
           label: (
             <Link
               to="/login"
@@ -66,7 +70,6 @@ const ProtectedRoute = ({ children }) => {
     try {
       dispatch(showLoading());
       const response = await GetCurrentUser();
-      console.log(response);
       dispatch(setUser(response.data));
     } catch (error) {
       dispatch(setUser(null));

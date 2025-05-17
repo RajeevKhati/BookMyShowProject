@@ -50,7 +50,6 @@ const updateMovie = async (req, res) => {
 const deleteMovie = async (req, res) => {
   try {
     await Movie.findByIdAndDelete(req.body.movieId);
-    console.log(req.body.movieId);
     res.send({
       success: true,
       message: "The movie has been deleted!",

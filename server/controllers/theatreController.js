@@ -1,4 +1,4 @@
-const Theatre = require("../model/theatreModel");
+const Theatre = require("../models/theatreModel");
 
 const addTheatre = async (req, res) => {
   try {
@@ -19,7 +19,6 @@ const addTheatre = async (req, res) => {
 const updateTheatre = async (req, res) => {
   try {
     await Theatre.findByIdAndUpdate(req.body.theatreId, req.body);
-    // console.log(req.body.theatreId)
     res.send({
       success: true,
       message: "Theatre has been updated!",
@@ -34,7 +33,6 @@ const updateTheatre = async (req, res) => {
 
 const deleteTheatre = async (req, res) => {
   try {
-    console.log("deleting theatre", req.params.theatreId);
     await Theatre.findByIdAndDelete(req.params.theatreId);
     res.send({
       success: true,
