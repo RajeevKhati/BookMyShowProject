@@ -99,8 +99,8 @@ message.
     });
     res.send({
       success: true,
-      message: "All theatres fetched!",
       data: uniqueTheatres,
+      message: "All theatres by movie",
     });
   } catch (err) {
     res.send({

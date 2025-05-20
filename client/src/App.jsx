@@ -6,6 +6,7 @@ import Admin from "./pages/Admin";
 import Profile from "./pages/User";
 import Partner from "./pages/Partner";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import SingleMovie from "./pages/Home/SingleMovie";
 
 function App() {
   return (
@@ -43,6 +44,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Partner />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/movie/:id"
+            element={
+              <ProtectedRoute>
+                <SingleMovie />
               </ProtectedRoute>
             }
           />
