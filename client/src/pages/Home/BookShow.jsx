@@ -3,8 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { hideLoading, showLoading } from "../../redux/loaderSlice";
 import { getShowById } from "../../api/show";
 import { useNavigate, useParams } from "react-router-dom";
-import { message, Card, Row, Col } from "antd";
+import { message, Card, Row, Col, Button } from "antd";
 import moment from "moment";
+import { axiosInstance } from "../../api";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe(
+  "pk_test_51RSeSvD7vcBE3xveQHdFSaDYunxnuDH01SvxmcYe46l8Y041kwLDfwOVjUq4VG2QiLcTxwPYdaoAK7ielS37AdRy00u87GLFD7"
+); // your publishable key
 
 const BookShow = () => {
   const { user } = useSelector((state) => state.user);
@@ -98,6 +104,38 @@ const BookShow = () => {
     );
   };
 
+  const handleCheckout = async () => {
+    // const stripe = await stripePromise;
+
+    // const response = await axiosInstance.post(
+    //   "http://localhost:4242/create-checkout-session"
+    // );
+
+    // const session = await response.json();
+
+    // const result = await stripe.redirectToCheckout({
+    //   sessionId: session.id,
+    // });
+
+    // if (result.error) {
+    //   console.error(result.error.message);
+    // }
+
+    try {
+      const response = await axiosInstance.post(
+        "/api/booking/create-checkout-session",
+        {
+          selectedSeats,
+          showId: show._id,
+          ticketPrice: show.ticketPrice,
+        }
+      );
+      window.location.href = response.data.url;
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     getData();
   }, []);
@@ -155,6 +193,19 @@ const BookShow = () => {
               style={{ width: "100%" }}
             >
               {getSeats()}
+              {selectedSeats.length > 0 && (
+                <div className="max-width-600 mx-auto">
+                  <Button
+                    onClick={handleCheckout}
+                    type="primary"
+                    shape="round"
+                    size="large"
+                    block
+                  >
+                    Pay Now
+                  </Button>
+                </div>
+              )}
             </Card>
           </Col>
         </Row>

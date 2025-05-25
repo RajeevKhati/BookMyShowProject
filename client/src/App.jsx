@@ -8,6 +8,8 @@ import Partner from "./pages/Partner";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SingleMovie from "./pages/Home/SingleMovie";
 import BookShow from "./pages/Home/BookShow";
+import SuccessPage from "./pages/Home/SuccessPage";
+import ErrorPage from "./pages/Home/ErrorPage";
 
 function App() {
   return (
@@ -64,6 +66,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/error" element={<ErrorPage />} />
         </Routes>
       </BrowserRouter>
     </div>
