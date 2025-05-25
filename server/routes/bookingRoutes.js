@@ -27,18 +27,58 @@ bookingRouter.post(
           },
         ],
         mode: "payment",
-        success_url: `${
-          process.env.CLIENT_URL
-        }/success?show=${showId}&seats=${selectedSeats.join(",")}`,
+        success_url: `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.CLIENT_URL}/error`,
+        metadata: {
+          showId,
+          seats: JSON.stringify(selectedSeats),
+          userId: req.userId, // coming from authMiddleware
+        },
       });
 
       res.send({ success: true, url: session.url });
     } catch (err) {
-      res.send({ success: false, message: err.message });
+      res.status(500).send({ success: false, message: err.message });
     }
   }
 );
+
+bookingRouter.post("/confirm-booking", async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    const showId = session.metadata.showId;
+    const seats = JSON.parse(session.metadata.seats);
+    const userId = session.metadata.userId;
+    const transactionId = session.payment_intent;
+
+    const newBooking = new Booking({
+      show: showId,
+      seats,
+      user: userId,
+      transactionId,
+    });
+
+    await newBooking.save();
+
+    // Update booked seats
+    const existingShow = await Show.findById(showId);
+    const updatedSeats = [...existingShow.bookedSeats, ...seats];
+    await Show.findByIdAndUpdate(showId, {
+      bookedSeats: updatedSeats,
+    });
+
+    res.send({
+      success: true,
+      message: "Booking confirmed and transaction stored.",
+      data: newBooking,
+    });
+  } catch (err) {
+    res.status(500).send({ success: false, message: err.message });
+  }
+});
 
 // Create a booking after the payment
 bookingRouter.post("/book-show", authMiddleware, async (req, res) => {

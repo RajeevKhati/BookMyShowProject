@@ -1,4 +1,3 @@
-// pages/ErrorPage.jsx
 import { Result, Button } from "antd";
 import { useNavigate } from "react-router-dom";
 

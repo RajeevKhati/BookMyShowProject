@@ -105,23 +105,8 @@ const BookShow = () => {
   };
 
   const handleCheckout = async () => {
-    // const stripe = await stripePromise;
-
-    // const response = await axiosInstance.post(
-    //   "http://localhost:4242/create-checkout-session"
-    // );
-
-    // const session = await response.json();
-
-    // const result = await stripe.redirectToCheckout({
-    //   sessionId: session.id,
-    // });
-
-    // if (result.error) {
-    //   console.error(result.error.message);
-    // }
-
     try {
+      dispatch(showLoading());
       const response = await axiosInstance.post(
         "/api/booking/create-checkout-session",
         {
@@ -130,9 +115,12 @@ const BookShow = () => {
           ticketPrice: show.ticketPrice,
         }
       );
+      dispatch(hideLoading());
       window.location.href = response.data.url;
     } catch (err) {
+      dispatch(hideLoading());
       console.error(err);
+      message.error("Checkout initiation failed");
     }
   };
 
