@@ -7,6 +7,7 @@ import Profile from "./pages/User";
 import Partner from "./pages/Partner";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SingleMovie from "./pages/Home/SingleMovie";
+import BookShow from "./pages/Home/BookShow";
 
 function App() {
   return (
@@ -52,6 +53,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SingleMovie />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/book-show/:id"
+            element={
+              <ProtectedRoute>
+                <BookShow />
               </ProtectedRoute>
             }
           />

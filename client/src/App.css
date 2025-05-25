@@ -9,7 +9,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 500px;
 }
 .flex-1 {
   flex: 1;
@@ -238,6 +237,7 @@ hr {
 .px-3 {
   padding-inline: 1rem;
 }
+
 /* Loader */
 .loader-container {
   position: fixed;
@@ -272,6 +272,7 @@ hr {
     -webkit-transform: rotate(360deg);
   }
 }
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -281,6 +282,7 @@ hr {
   }
 }
 /* Loader Ends here */
+
 @media screen and (min-width: 768px) {
   .site-layout {
     padding: 0 50px;

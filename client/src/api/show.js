@@ -58,6 +58,7 @@ export const getShowById = async (payload) => {
     );
     return response.data;
   } catch (err) {
+    console.error("get-show-by-id error", err);
     return err.message;
   }
 };
