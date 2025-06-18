@@ -25,6 +25,12 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: "user",
   },
+  otp: {
+    type: String,
+  },
+  otpExpiry: {
+    type: Date,
+  },
 });
 
 const UserModel = mongoose.model("users", userSchema);
