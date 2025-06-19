@@ -21,7 +21,7 @@ async function emailHelper(templateName, reciverEmail, creds) {
     let content = await fs.promises.readFile(templatePath, "utf-8");
     const emailDetails = {
       to: reciverEmail,
-      from: "test@example.com", // Change to your verified sender
+      from: "rajeevrocks531@gmail.com", // Change to your verified sender
       subject: "Mail from ScalerShows",
       text: `Hi ${creds.name} this your reset otp ${creds.otp}`,
       html: replaceContent(content, creds),
@@ -38,7 +38,7 @@ async function emailHelper(templateName, reciverEmail, creds) {
     await transporter.sendMail(emailDetails);
     console.log("email sent");
   } catch (err) {
-    console.log(err);
+    console.log("email sent error => ", err);
   }
 }
 

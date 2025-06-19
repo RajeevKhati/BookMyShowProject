@@ -10,6 +10,8 @@ import SingleMovie from "./pages/Home/SingleMovie";
 import BookShow from "./pages/Home/BookShow";
 import SuccessPage from "./pages/Home/SuccessPage";
 import ErrorPage from "./pages/Home/ErrorPage";
+import Forget from "./pages/User/ForgetPassword";
+import Reset from "./pages/User/ResetPassword";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forget" element={<Forget />} />
+          <Route path="/reset/:email" element={<Reset />} />
           <Route
             path="/admin"
             element={
