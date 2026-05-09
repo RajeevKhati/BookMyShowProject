@@ -11,7 +11,6 @@ const showRouter = require("./routes/showRoutes");
 const bookingRouter = require("./routes/bookingRoutes");
 
 console.log("server", process.env.DB_URL);
-connectDB(); // Connect to database
 
 /** Routes */
 app.use(express.json());
@@ -21,6 +20,25 @@ app.use("/api/theatres", theatreRouter);
 app.use("/api/shows", showRouter);
 app.use("/api/booking", bookingRouter);
 
-app.listen(3001, () => {
-  console.log("Server is Running");
+/**
+ * Bootstrap: connect DB before accepting traffic.
+ * Admin seed on startup is OFF by default (run `npm run seed:admin` or CI instead).
+ * Opt-in only for local/Docker: AUTO_SEED_ADMIN=true + SEED_ADMIN_PASSWORD set.
+ */
+async function start() {
+  await connectDB();
+
+  if (process.env.AUTO_SEED_ADMIN === "true") {
+    const { seedAdminUser } = require("./seeding/adminSeed");
+    await seedAdminUser({ strict: false });
+  }
+
+  app.listen(3001, () => {
+    console.log("Server is Running");
+  });
+}
+
+start().catch((err) => {
+  console.error("Server startup failed:", err.message);
+  process.exit(1);
 });

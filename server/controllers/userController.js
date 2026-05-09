@@ -1,6 +1,9 @@
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const emailHelper = require("../utils/emailHelper");
+
+const SALT_ROUNDS = 10;
 
 const register = async (req, res) => {
   try {
@@ -11,7 +14,11 @@ const register = async (req, res) => {
         message: "User Already Exists",
       });
     }
-    const newUser = new User(req.body);
+    const hashedPassword = await bcrypt.hash(req.body.password, SALT_ROUNDS);
+    const newUser = new User({
+      ...req.body,
+      password: hashedPassword,
+    });
     await newUser.save();
     res.send({
       success: true,
@@ -31,6 +38,24 @@ const login = async (req, res) => {
         message: "User does not exist. Please register.",
       });
     }
+
+    let passwordOk = await bcrypt.compare(
+      req.body.password,
+      user.password
+    );
+    // Legacy: plaintext passwords stored before hashing — upgrade on successful login
+    if (!passwordOk && user.password === req.body.password) {
+      passwordOk = true;
+      user.password = await bcrypt.hash(req.body.password, SALT_ROUNDS);
+      await user.save();
+    }
+    if (!passwordOk) {
+      return res.send({
+        success: false,
+        message: "Invalid email or password.",
+      });
+    }
+
     const token = jwt.sign({ userId: user._id }, process.env.jwt_secret, {
       expiresIn: "1d",
     });
@@ -148,7 +173,7 @@ const resetPassword = async function (req, res) {
         message: "otp expired",
       });
     }
-    user.password = req.body.password;
+    user.password = await bcrypt.hash(req.body.password, SALT_ROUNDS);
     // remove the otp from the user
     user.otp = undefined;
     user.otpExpiry = undefined;
