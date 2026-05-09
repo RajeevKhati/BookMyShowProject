@@ -22,12 +22,7 @@ const SuccessPage = () => {
       try {
         const response = await axiosInstance.post(
           "/api/booking/confirm-booking",
-          { sessionId },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+          { sessionId }
         );
         if (response.data.success) {
           setBookingSuccess(true);
