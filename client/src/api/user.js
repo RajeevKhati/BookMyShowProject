@@ -33,10 +33,19 @@ export const ForgetPassword = async (value) => {
       "/api/users/forgetpassword",
       value
     );
-    console.log("forget response => ", response);
     return response.data;
   } catch (error) {
-    console.log(error);
+    const data = error.response?.data;
+    if (data?.message != null) {
+      return {
+        status: data.status ?? "failure",
+        message: data.message,
+      };
+    }
+    return {
+      status: "failure",
+      message: error.message || "Something went wrong. Please try again.",
+    };
   }
 };
 export const ResetPassword = async (value, id) => {

@@ -84,35 +84,30 @@ const getCurrentUser = async (req, res) => {
   });
 };
 
-//Function for otp generation
+// OTP: random 6-digit integer
 const otpGenerator = function () {
   return Math.floor(100000 + Math.random() * 900000);
 };
-/**
-* Math.random(): Generates a random floating-point number between 0 (inclusive) and 1
-(exclusive).
-Math.random() * 900000: Scales the random number to a range between 0 and 899999.
-100000 + Math.random() * 900000: Shifts the range to be between 100000 and 999999.
-Math.floor(): Rounds down to the nearest whole number.
-*/
+/*
+ * Math.random(): 0 (inclusive) to 1 (exclusive).
+ * * 900000 → range 0..899999; +100000 → 100000..999999; floor → integer.
+ */
 
 const forgetPassword = async function (req, res) {
   try {
     /****
-     * 1. You can ask for email
-     * 2. check if email is present or not
-     * * if email is not present -> send a response to the user(user not found)
-     * 3. if email is present -> create basic otp -> and send to the email
-     * 4. also store that otp -> in the userModel
-     *
-     * ***/
+     * 1. Ask for email
+     * 2. If missing email → failure
+     * 3. If user exists → generate OTP, save + expiry on user
+     * 4. Send OTP email; on send failure → clear OTP and return 503
+     ****/
     if (req.body.email == undefined) {
       return res.status(401).json({
         status: "failure",
         message: "Please enter the email for forget Password",
       });
     }
-    // find the user -> going db -> getting it for the server
+    // Look up user in DB
     let user = await User.findOne({ email: req.body.email });
     if (user == null) {
       return res.status(404).json({
@@ -120,53 +115,64 @@ const forgetPassword = async function (req, res) {
         message: "user not found for this email",
       });
     }
-    // got the user -> on your server
     const otp = otpGenerator();
     user.otp = otp;
-    user.otpExpiry = Date.now() + 10 * 60 * 1000;
-    // those updates will be send to the db
+    user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
-    await emailHelper("otp.html", user.email, {
-      name: user.name,
-      otp: otp,
-    });
+    try {
+      // Delegates to Resend or SendGrid based on env (see utils/email/)
+      await emailHelper("otp.html", user.email, {
+        name: user.name,
+        otp: otp,
+      });
+    } catch (emailErr) {
+      console.error("forgetPassword: email failed:", emailErr);
+      try {
+        user.otp = undefined;
+        user.otpExpiry = undefined;
+        await user.save();
+      } catch (rollbackErr) {
+        console.error("forgetPassword: OTP rollback failed:", rollbackErr);
+      }
+      return res.status(503).json({
+        status: "failure",
+        message:
+          "Unable to send the reset email. Please try again later or contact support.",
+      });
+    }
     res.status(200).json({
       status: "success",
       message: "otp sent to your email",
     });
-    // send the mail to there email -> otp
+    // Success: OTP email accepted by provider
   } catch (err) {
     res.status(500).json({
       message: err.message,
       status: "failure",
     });
   }
-  // email
 };
 
 const resetPassword = async function (req, res) {
-  // -> otp
-  // newPassword and newConfirmPassword
-  // -> params -> id
+  // Body: password, otp | Params: email (URL)
   try {
     let resetDetails = req.body;
-    // required fields are there or not
+    // Required: new password + OTP from email
     if (!resetDetails.password || !resetDetails.otp) {
       return res.status(401).json({
         status: "failure",
         message: "invalid request",
       });
     }
-    // it will serach with the id -> user
+    // User row for this email (from URL)
     const user = await User.findOne({ email: req.params.email });
-    // if user is not present
     if (user == null) {
       return res.status(404).json({
         status: "failure",
         message: "user not found",
       });
     }
-    // if otp is expired
+    // OTP window still valid?
     if (Date.now() > user.otpExpiry) {
       return res.status(401).json({
         status: "failure",
@@ -174,9 +180,8 @@ const resetPassword = async function (req, res) {
       });
     }
     user.password = await bcrypt.hash(req.body.password, SALT_ROUNDS);
-    // remove the otp from the user
     user.otp = undefined;
-    user.otpExpiry = undefined;
+    user.otpExpiry = undefined; // clear OTP fields after successful reset
     await user.save();
     res.status(200).json({
       status: "success",

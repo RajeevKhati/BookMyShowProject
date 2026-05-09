@@ -112,8 +112,6 @@ bookingRouter.post("/book-show", authMiddleware, async (req, res) => {
         },
       });
 
-    console.log("this is populated Booking", populatedBooking);
-    // console.log(populatedBooking.user.email);
     await emailHelper("ticketTemplate.html", populatedBooking.user.email, {
       name: populatedBooking.user.name,
       movie: populatedBooking.show.movie.title,

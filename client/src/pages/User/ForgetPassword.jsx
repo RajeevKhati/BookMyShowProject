@@ -1,19 +1,15 @@
-import React, { useEffect } from "react";
-import { Button, Form, Input } from "antd";
+import React from "react";
+import { Button, Form, Input, message } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { ForgetPassword, LoginUser } from "../../api/user";
-import { message } from "antd";
+import { ForgetPassword } from "../../api/user";
 
 function Forget() {
   const navigate = useNavigate();
   const onFinish = async (values) => {
-    console.log(values);
     try {
       const response = await ForgetPassword(values);
       if (response.status === "success") {
         message.success(response.message);
-        alert("OTP sent to your email");
-        // window.location.href = "/reset";
         navigate(`/reset/${encodeURIComponent(values.email)}`);
       } else {
         message.error(response.message);
