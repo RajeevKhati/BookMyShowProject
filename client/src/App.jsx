@@ -13,6 +13,10 @@ import ErrorPage from "./pages/Home/ErrorPage";
 import Forget from "./pages/User/ForgetPassword";
 import Reset from "./pages/User/ResetPassword";
 
+const ROLE_ADMIN_AREA = ["admin"];
+const ROLE_PARTNER_AREA = ["partner"];
+const ROLE_USER_AREA = ["user"];
+
 function App() {
   return (
     <div>
@@ -33,7 +37,7 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={ROLE_ADMIN_AREA}>
                 <Admin />
               </ProtectedRoute>
             }
@@ -41,7 +45,7 @@ function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={ROLE_USER_AREA}>
                 <Profile />
               </ProtectedRoute>
             }
@@ -49,7 +53,7 @@ function App() {
           <Route
             path="/partner"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={ROLE_PARTNER_AREA}>
                 <Partner />
               </ProtectedRoute>
             }
