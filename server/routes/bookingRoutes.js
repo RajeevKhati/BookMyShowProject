@@ -1,9 +1,21 @@
 const bookingRouter = require("express").Router();
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const authMiddleware = require("../middlewares/authMiddleware");
 const Booking = require("../models/bookingModel");
 const Show = require("../models/showModel");
 const emailHelper = require("../utils/emailHelper");
+
+let stripeClient;
+/** Lazy init so loading this module doesn't require Stripe env (scripts/tests/offline tooling). */
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+  if (!stripeClient) {
+    stripeClient = require("stripe")(key);
+  }
+  return stripeClient;
+}
 
 bookingRouter.post(
   "/create-checkout-session",
@@ -12,7 +24,7 @@ bookingRouter.post(
     try {
       const { selectedSeats, showId, ticketPrice } = req.body;
 
-      const session = await stripe.checkout.sessions.create({
+      const session = await getStripe().checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
           {
@@ -48,7 +60,7 @@ bookingRouter.post("/confirm-booking", async (req, res) => {
   try {
     const { sessionId } = req.body;
 
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
 
     const showId = session.metadata.showId;
     const seats = JSON.parse(session.metadata.seats);
@@ -85,6 +97,12 @@ bookingRouter.post("/confirm-booking", async (req, res) => {
 bookingRouter.post("/book-show", authMiddleware, async (req, res) => {
   try {
     const { show, seats, user } = req.body;
+    if (user == null || String(user) !== String(req.userId)) {
+      return res.status(403).send({
+        success: false,
+        message: "You can only book for your own account.",
+      });
+    }
     const newBooking = new Booking({ show, seats, user });
     await newBooking.save();
 
@@ -108,13 +126,13 @@ bookingRouter.post("/book-show", authMiddleware, async (req, res) => {
         path: "show",
         populate: {
           path: "theatre",
-          model: "theatre",
+          model: "theatres",
         },
       });
 
     await emailHelper("ticketTemplate.html", populatedBooking.user.email, {
       name: populatedBooking.user.name,
-      movie: populatedBooking.show.movie.title,
+      movie: populatedBooking.show.movie.movieName,
       theatre: populatedBooking.show.theatre.name,
       date: populatedBooking.show.date,
       time: populatedBooking.show.time,
@@ -138,7 +156,7 @@ bookingRouter.post("/book-show", authMiddleware, async (req, res) => {
 
 bookingRouter.get("/get-all-bookings", authMiddleware, async (req, res) => {
   try {
-    const bookings = await Booking.find({ user: req.body.userId })
+    const bookings = await Booking.find({ user: req.userId })
       .populate("user")
       .populate("show")
       .populate({

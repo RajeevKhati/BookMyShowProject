@@ -1,4 +1,12 @@
 const theatreRouter = require("express").Router();
+const authMiddleware = require("../middlewares/authMiddleware");
+const { attachUser, requireRoles } = require("../middlewares/roleMiddleware");
+const {
+  authorizeTheatreUpdate,
+  authorizeTheatreDeletion,
+  authorizeOwnerListAccess,
+} = require("../middlewares/resourceAuthorization");
+
 const {
   addTheatre,
   updateTheatre,
@@ -7,18 +15,44 @@ const {
   getAllTheatresByOwner,
 } = require("../controllers/theatreController");
 
-theatreRouter.post("/add-theatre", addTheatre);
+const partnerOrAdminAdd = [
+  authMiddleware,
+  attachUser,
+  requireRoles("admin", "partner"),
+];
 
-// Update theatre
-theatreRouter.put("/update-theatre", updateTheatre);
+theatreRouter.post("/add-theatre", ...partnerOrAdminAdd, addTheatre);
 
-// Delete theatre
-theatreRouter.delete("/delete-theatre/:theatreId", deleteTheatre);
+theatreRouter.put(
+  "/update-theatre",
+  authMiddleware,
+  attachUser,
+  authorizeTheatreUpdate,
+  updateTheatre
+);
 
-// Get all theatres for Admin route
-theatreRouter.get("/get-all-theatres", getAllTheatres);
+theatreRouter.delete(
+  "/delete-theatre/:theatreId",
+  authMiddleware,
+  attachUser,
+  authorizeTheatreDeletion,
+  deleteTheatre
+);
 
-// Get the theatres of a specific owner
-theatreRouter.get("/get-all-theatres-by-owner/:ownerId", getAllTheatresByOwner);
+theatreRouter.get(
+  "/get-all-theatres",
+  authMiddleware,
+  attachUser,
+  requireRoles("admin"),
+  getAllTheatres
+);
+
+theatreRouter.get(
+  "/get-all-theatres-by-owner/:ownerId",
+  authMiddleware,
+  attachUser,
+  authorizeOwnerListAccess,
+  getAllTheatresByOwner
+);
 
 module.exports = theatreRouter;

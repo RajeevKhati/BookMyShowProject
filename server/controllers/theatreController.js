@@ -2,6 +2,9 @@ const Theatre = require("../models/theatreModel");
 
 const addTheatre = async (req, res) => {
   try {
+    if (req.user.role === "partner") {
+      req.body.owner = req.user._id;
+    }
     const newTheatre = new Theatre(req.body);
     await newTheatre.save();
     res.send({
@@ -18,6 +21,10 @@ const addTheatre = async (req, res) => {
 
 const updateTheatre = async (req, res) => {
   try {
+    if (req.user.role === "partner") {
+      delete req.body.owner;
+      delete req.body.isActive;
+    }
     await Theatre.findByIdAndUpdate(req.body.theatreId, req.body);
     res.send({
       success: true,

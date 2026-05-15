@@ -34,7 +34,11 @@ const deleteShow = async (req, res) => {
 
 const updateShow = async (req, res) => {
   try {
-    await Show.findByIdAndUpdate(req.body.showId, req.body);
+    if (req.user.role !== "admin") {
+      delete req.body.theatre;
+    }
+    const { showId, ...updates } = req.body;
+    await Show.findByIdAndUpdate(showId, updates);
     res.send({
       success: true,
       message: "The show has been updated!",
