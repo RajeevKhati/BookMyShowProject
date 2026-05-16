@@ -166,6 +166,7 @@ const ShowModal = ({
                 setSelectedShow({
                   ...data,
                   date: moment(data.date).format("YYYY-MM-DD"),
+                  movie: data.movie._id,
                 });
                 console.log(selectedMovie && selectedMovie.title);
               }}
