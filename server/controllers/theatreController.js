@@ -14,7 +14,7 @@ const addTheatre = async (req, res) => {
   } catch (err) {
     res.send({
       success: false,
-      essage: err.message,
+      message: err.message,
     });
   }
 };

@@ -43,7 +43,7 @@ export const updateTheatre = async (payload) => {
     );
     return response.data;
   } catch (err) {
-    return err.resposne;
+    return err.response;
   }
 };
 

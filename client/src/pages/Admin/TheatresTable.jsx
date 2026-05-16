@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getAllTheatresForAdmin, updateTheatre } from "../../api/theatre";
 import { showLoading, hideLoading } from "../../redux/loaderSlice";
 import { useDispatch } from "react-redux";
-import { message, Button, Table } from "antd";
+import { message, Button, Table, Empty } from "antd";
 
 const TheatresTable = () => {
   const [theatres, setTheatres] = useState([]);
@@ -12,7 +12,7 @@ const TheatresTable = () => {
       dispatch(showLoading());
       const response = await getAllTheatresForAdmin();
       if (response.success) {
-        const allTheatres = response.data;
+        const allTheatres = response.data ?? [];
         setTheatres(
           allTheatres.map(function (item) {
             return { ...item, key: `theatre${item._id}` };
@@ -29,21 +29,21 @@ const TheatresTable = () => {
   };
   const handleStatusChange = async (theatre) => {
     try {
-      dispatch(showLoading);
-      let values = {
-        ...theatres,
+      dispatch(showLoading());
+      const payload = {
         theatreId: theatre._id,
         isActive: !theatre.isActive,
       };
-      const response = await updateTheatre(values);
-      console.log(response, theatre);
+      const response = await updateTheatre(payload);
       if (response.success) {
         message.success(response.message);
         getData();
+      } else {
+        message.error(response?.message || "Could not update theatre status");
       }
-      dispatch(hideLoading);
+      dispatch(hideLoading());
     } catch (err) {
-      dispatch(hideLoading);
+      dispatch(hideLoading());
       message.error(err.message);
     }
   };
@@ -107,11 +107,19 @@ const TheatresTable = () => {
   }, []);
   // console.log(theatres.length > 0 && theatres);
   return (
-    <>
-      {theatres && theatres.length > 0 && (
-        <Table dataSource={theatres} columns={columns} />
-      )}
-    </>
+    <Table
+      dataSource={theatres}
+      columns={columns}
+      rowKey={(row) => row.key ?? row._id}
+      locale={{
+        emptyText: (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="No theatres yet. Partner-added venues will appear here for approval."
+          />
+        ),
+      }}
+    />
   );
 };
 
