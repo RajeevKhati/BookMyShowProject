@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getMovieById } from "../../api/movie";
-import { Input, Divider, Row, Col } from "antd";
+import { Divider, Input } from "antd";
 import { toast } from "../../feedback/toast";
 import { CalendarOutlined } from "@ant-design/icons";
 import moment from "moment";
 import { getAllTheatresByMovie } from "../../api/show";
+import { PageHeading, SurfaceCard } from "../../components/layout";
+import { UiButton } from "../../components/ui";
+import { theme as cinematicTheme } from "../../styles/theme";
 
 const SingleMovie = () => {
   const params = useParams();
@@ -13,8 +16,10 @@ const SingleMovie = () => {
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
   const [theatres, setTheatres] = useState([]);
   const navigate = useNavigate();
+
   const handleDate = (e) => {
-    setDate(moment(e.target.value).format("YYYY-MM-DD"));
+    const next = moment(e.target.value).format("YYYY-MM-DD");
+    setDate(next);
     navigate(`/movie/${params.id}?date=${e.target.value}`);
   };
 
@@ -33,7 +38,10 @@ const SingleMovie = () => {
 
   const getAllTheatres = async () => {
     try {
-      const response = await getAllTheatresByMovie({ movie: params.id, date });
+      const response = await getAllTheatresByMovie({
+        movie: params.id,
+        date,
+      });
       if (response.success) {
         setTheatres(response.data);
       } else {
@@ -52,95 +60,144 @@ const SingleMovie = () => {
     getAllTheatres();
   }, [date]);
 
+  const metaRow = (label, value) => (
+    <div className="flex flex-wrap gap-x-2 gap-y-1">
+      <span
+        className="text-sm font-medium"
+        style={{ color: cinematicTheme.colors.textSecondary }}
+      >
+        {label}
+      </span>
+      <span className="text-sm text-white">{value}</span>
+    </div>
+  );
+
   return (
-    <>
-      <div className="inner-container">
-        {movie && (
-          <div className="d-flex single-movie-div">
-            <div className="flex-Shrink-0 me-3 single-movie-img">
-              <img src={movie.poster} width={150} alt="Movie Poster" />
-            </div>
-            <div className="w-100">
-              <h1 className="mt-0">{movie.movieName}</h1>
-              <p className="movie-data">
-                Language: <span>{movie.language}</span>
-              </p>
-              <p className="movie-data">
-                Genre: <span>{movie.genre}</span>
-              </p>
-              <p className="movie-data">
-                Release Date:{" "}
-                <span>{moment(movie.releaseDate).format("MMM Do YYYY")}</span>
-              </p>
-              <p className="movie-data">
-                Duration: <span>{movie.duration} Minutes</span>
-              </p>
-              <hr />
-              <div className="d-flex flex-column-mob align-items-center mt-3">
-                <label className="me-3 flex-shrink-0">Choose the date:</label>
-                <Input
-                  onChange={handleDate}
-                  type="date"
-                  min={moment().format("YYYY-MM-DD")}
-                  className="max-width-300 mt-8px-mob"
-                  value={date}
-                  placeholder="default size"
-                  prefix={<CalendarOutlined />}
+    <div className="mx-auto max-w-5xl space-y-8 pb-12">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <UiButton variant="secondary" size="middle" onClick={() => navigate("/")}>
+          ← Back to browse
+        </UiButton>
+      </div>
+
+      {movie && (
+        <>
+          <SurfaceCard className="!p-6 sm:!p-8">
+            <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-10">
+              <div className="mx-auto shrink-0 md:mx-0">
+                <img
+                  src={movie.poster}
+                  alt=""
+                  className="w-[160px] rounded-xl shadow-lg ring-1 ring-white/10 sm:w-[200px]"
                 />
               </div>
+              <div className="min-w-0 flex-1 space-y-5">
+                <PageHeading
+                  align="left"
+                  eyebrow="Movie details"
+                  title={movie.movieName}
+                />
+                <dl className="m-0 grid gap-3 sm:grid-cols-2">
+                  <div>{metaRow("Language", movie.language)}</div>
+                  <div>{metaRow("Genre", movie.genre)}</div>
+                  <div>
+                    {metaRow(
+                      "Release date",
+                      moment(movie.releaseDate).format("MMM Do YYYY"),
+                    )}
+                  </div>
+                  <div>{metaRow("Duration", `${movie.duration} min`)}</div>
+                </dl>
+
+                <Divider className="!my-2 border-[#2a2a2a]" />
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <span className="flex shrink-0 items-center gap-2 text-sm font-semibold text-[#B3B3B3]">
+                    <CalendarOutlined aria-hidden />
+                    Show date
+                  </span>
+                  <Input
+                    type="date"
+                    size="large"
+                    min={moment().format("YYYY-MM-DD")}
+                    value={date}
+                    onChange={handleDate}
+                    className="max-w-[260px] !rounded-xl"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-        {theatres.length === 0 && (
-          <div className="pt-3">
-            <h2 className="blue-clr">
-              Currently, no theatres available for this movie!
-            </h2>
-          </div>
-        )}
-        {theatres.length > 0 && (
-          <div className="theatre-wrapper mt-3 pt-3">
-            <h2>Theatres</h2>
-            {theatres.map((theatre) => {
-              return (
-                <div key={theatre._id}>
-                  <Row gutter={24} key={theatre._id}>
-                    <Col xs={{ span: 24 }} lg={{ span: 8 }}>
-                      <h3>{theatre.name}</h3>
-                      <p>{theatre.address}</p>
-                    </Col>
-                    <Col xs={{ span: 24 }} lg={{ span: 16 }}>
-                      <ul className="show-ul">
+          </SurfaceCard>
+
+          {theatres.length === 0 ? (
+            <SurfaceCard className="py-12 text-center">
+              <p
+                className="m-0 text-lg font-semibold"
+                style={{ color: cinematicTheme.colors.textSecondary }}
+              >
+                No showtimes for this date yet.
+              </p>
+              <p className="mt-2 mb-0 text-sm text-[#808080]">
+                Pick another date above — theatres update daily.
+              </p>
+            </SurfaceCard>
+          ) : (
+            <section className="space-y-4">
+              <h2 className="m-0 text-xl font-bold tracking-tight text-white">
+                Theatres &amp; showtimes
+              </h2>
+              {theatres.map((theatre) => (
+                <SurfaceCard key={theatre._id} className="!p-5 sm:!p-6">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
+                    <div className="min-w-0 shrink-0 lg:w-[280px]">
+                      <h3 className="m-0 text-lg font-semibold text-white">
+                        {theatre.name}
+                      </h3>
+                      <p
+                        className="mt-2 mb-0 text-sm leading-relaxed"
+                        style={{ color: cinematicTheme.colors.textSecondary }}
+                      >
+                        {theatre.address}
+                      </p>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
                         {theatre.shows
+                          .slice()
                           .sort(
                             (a, b) =>
-                              moment(a.time, "HH:mm") - moment(b.time, "HH:mm")
+                              moment(a.time, "HH:mm").valueOf() -
+                              moment(b.time, "HH:mm").valueOf(),
                           )
-                          .map((singleShow) => {
-                            return (
-                              <li
-                                key={singleShow._id}
+                          .map((singleShow) => (
+                            <li key={singleShow._id}>
+                              <button
+                                type="button"
+                                className="rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:bg-[#E50914]/15 hover:border-[#E50914]"
+                                style={{
+                                  borderColor: cinematicTheme.colors.elevated,
+                                  color: cinematicTheme.colors.text,
+                                }}
                                 onClick={() =>
                                   navigate(`/book-show/${singleShow._id}`)
                                 }
                               >
                                 {moment(singleShow.time, "HH:mm").format(
-                                  "hh:mm A"
+                                  "hh:mm A",
                                 )}
-                              </li>
-                            );
-                          })}
+                              </button>
+                            </li>
+                          ))}
                       </ul>
-                    </Col>
-                  </Row>
-                  <Divider />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </>
+                    </div>
+                  </div>
+                </SurfaceCard>
+              ))}
+            </section>
+          )}
+        </>
+      )}
+    </div>
   );
 };
 

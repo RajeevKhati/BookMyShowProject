@@ -1,19 +1,15 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { getShowById } from "../../api/show";
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, Row, Col, Button } from "antd";
+import { Spin } from "antd";
 import { toast } from "../../feedback/toast";
 import moment from "moment";
 import { axiosInstance } from "../../api";
-import { loadStripe } from "@stripe/stripe-js";
-
-const stripePromise = loadStripe(
-  "pk_test_51RSeSvD7vcBE3xveQHdFSaDYunxnuDH01SvxmcYe46l8Y041kwLDfwOVjUq4VG2QiLcTxwPYdaoAK7ielS37AdRy00u87GLFD7"
-); // your publishable key
+import { PageHeading, SurfaceCard } from "../../components/layout";
+import { UiButton } from "../../components/ui";
+import { theme as cinematicTheme } from "../../styles/theme";
 
 const BookShow = () => {
-  const { user } = useSelector((state) => state.user);
   const [show, setShow] = useState();
   const [selectedSeats, setSelectedSeats] = useState([]);
   const params = useParams();
@@ -38,38 +34,57 @@ const BookShow = () => {
     const rows = totalSeats / columns;
 
     return (
-      <div className="flex flex-col items-center">
-        <div className="w-full max-w-[600px] mx-auto mb-6">
-          <p className="text-center mb-2 text-sm text-gray-600">
-            Screen this side, you will be watching in this direction
+      <div className="flex flex-col items-center px-2">
+        <div className="mx-auto mb-8 w-full max-w-[600px]">
+          <p
+            className="mb-3 text-center text-sm"
+            style={{ color: cinematicTheme.colors.textSecondary }}
+          >
+            Screen this side — you&apos;ll be facing this direction
           </p>
-          <div className="h-2 w-3/4 mx-auto bg-gray-200 rounded-sm"></div>
+          <div
+            className="mx-auto h-2 w-3/4 rounded-full"
+            style={{ backgroundColor: cinematicTheme.colors.elevated }}
+          />
         </div>
 
-        <ul className="flex flex-wrap justify-center gap-2 max-w-[600px]">
+        <ul className="mx-auto flex max-w-[640px] flex-wrap justify-center gap-2">
           {Array.from(Array(rows).keys()).map((row) =>
             Array.from(Array(columns).keys()).map((column) => {
               const seatNumber = row * columns + column + 1;
               if (seatNumber > totalSeats) return null;
 
-              let baseClasses =
-                "w-10 h-9 text-sm flex items-center justify-center border rounded cursor-pointer";
-              let seatClasses = "bg-gray-100 border-gray-400 hover:bg-gray-200";
-              if (selectedSeats.includes(seatNumber))
-                seatClasses = "bg-green-600 border-green-600 text-white";
-              if (show?.bookedSeats.includes(seatNumber))
-                seatClasses =
-                  "bg-gray-300 border-gray-300 text-gray-500 cursor-not-allowed";
+              const booked = show.bookedSeats.includes(seatNumber);
+              const selected = selectedSeats.includes(seatNumber);
+
+              let bg = cinematicTheme.colors.backgroundSecondary;
+              let border = "#444444";
+              let textCls = "text-white";
+
+              if (booked) {
+                bg = "#2a2a2a";
+                border = "#3d3d3d";
+                textCls = "text-[#808080]";
+              } else if (selected) {
+                bg = cinematicTheme.colors.success;
+                border = cinematicTheme.colors.success;
+                textCls = "text-[#0f0f0f]";
+              }
 
               return (
                 <li key={seatNumber}>
                   <button
-                    className={`${baseClasses} ${seatClasses}`}
+                    type="button"
+                    disabled={booked}
+                    className={`flex h-9 w-10 items-center justify-center rounded-lg border text-sm font-semibold transition-colors ${textCls} ${
+                      booked ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:brightness-110"
+                    }`}
+                    style={{ backgroundColor: bg, borderColor: border }}
                     onClick={() => {
-                      if (show.bookedSeats.includes(seatNumber)) return;
-                      if (selectedSeats.includes(seatNumber)) {
+                      if (booked) return;
+                      if (selected) {
                         setSelectedSeats(
-                          selectedSeats.filter((s) => s !== seatNumber)
+                          selectedSeats.filter((s) => s !== seatNumber),
                         );
                       } else {
                         setSelectedSeats([...selectedSeats, seatNumber]);
@@ -80,20 +95,36 @@ const BookShow = () => {
                   </button>
                 </li>
               );
-            })
+            }),
           )}
         </ul>
 
-        <div className="flex justify-between items-center w-full max-w-[600px] mx-auto mt-4 mb-6 p-4 border rounded">
-          <div className="flex-1">
-            Selected Seats:{" "}
-            <span className="font-semibold">{selectedSeats.join(", ")}</span>
+        <div
+          className="mx-auto mt-8 flex w-full max-w-[600px] flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between"
+          style={{
+            borderColor: cinematicTheme.colors.elevated,
+            backgroundColor: cinematicTheme.colors.backgroundSecondary,
+          }}
+        >
+          <div className="min-w-0 flex-1">
+            <p
+              className="m-0 text-xs font-semibold uppercase tracking-wider text-[#808080]"
+            >
+              Selected seats
+            </p>
+            <p className="mt-1 mb-0 truncate text-base font-semibold text-white">
+              {selectedSeats.length ? selectedSeats.join(", ") : "None yet"}
+            </p>
           </div>
-          <div className="ml-4 whitespace-nowrap">
-            Total Price:{" "}
-            <span className="font-semibold text-lg">
-              Rs. {selectedSeats.length * show.ticketPrice}
-            </span>
+          <div className="shrink-0 text-left sm:text-right">
+            <p
+              className="m-0 text-xs font-semibold uppercase tracking-wider text-[#808080]"
+            >
+              Total
+            </p>
+            <p className="mt-1 mb-0 text-xl font-bold tabular-nums text-white">
+              ₹{selectedSeats.length * show.ticketPrice}
+            </p>
           </div>
         </div>
       </div>
@@ -108,7 +139,7 @@ const BookShow = () => {
           selectedSeats,
           showId: show._id,
           ticketPrice: show.ticketPrice,
-        }
+        },
       );
       window.location.href = response.data.url;
     } catch (err) {
@@ -120,77 +151,90 @@ const BookShow = () => {
     getData();
   }, []);
 
+  if (!show) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
-    <>
-      {show && (
-        <Row gutter={24}>
-          <Col span={24}>
-            <Card
-              title={
-                <div className="mb-4">
-                  <h1 className="text-2xl font-bold mb-1">
-                    {show.movie.movieName}
-                  </h1>
-                  <p className="text-gray-600">
-                    Theatre: {show.theatre.name}, {show.theatre.address}
-                  </p>
-                </div>
-              }
-              extra={
-                <div className="space-y-1 text-right">
-                  <h3 className="text-base">
-                    <span className="font-medium text-gray-600">
-                      Show Name:
-                    </span>{" "}
-                    {show.name}
-                  </h3>
-                  <h3 className="text-base">
-                    <span className="font-medium text-gray-600">
-                      Date & Time:
-                    </span>{" "}
-                    {moment(show.date).format("MMM Do YYYY")} at{" "}
-                    {moment(show.time, "HH:mm").format("hh:mm A")}
-                  </h3>
-                  <h3 className="text-base">
-                    <span className="font-medium text-gray-600">
-                      Ticket Price:
-                    </span>{" "}
-                    Rs. {show.ticketPrice}/-
-                  </h3>
-                  <h3 className="text-base">
-                    <span className="font-medium text-gray-600">
-                      Total Seats:
-                    </span>{" "}
-                    {show.totalSeats}
-                    <span className="text-gray-600">
-                      {" "}
-                      &nbsp;|&nbsp; Available Seats:
-                    </span>{" "}
-                    {show.totalSeats - show.bookedSeats.length}
-                  </h3>
-                </div>
-              }
-              style={{ width: "100%" }}
+    <div className="mx-auto max-w-4xl space-y-8 pb-12">
+      <UiButton variant="secondary" size="middle" onClick={() => navigate(-1)}>
+        ← Back to movie
+      </UiButton>
+
+      <SurfaceCard className="!overflow-hidden !p-0">
+        <div
+          className="border-b px-6 py-6 sm:px-8"
+          style={{ borderColor: cinematicTheme.colors.elevated }}
+        >
+          <PageHeading
+            align="left"
+            eyebrow="Checkout"
+            title={show.movie.movieName}
+            subtitle={`${show.theatre.name} · ${show.theatre.address}`}
+          />
+          <dl className="m-0 mt-6 grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-[#808080]">
+                Show
+              </dt>
+              <dd className="mt-1 mb-0 font-semibold text-white">{show.name}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-[#808080]">
+                Date &amp; time
+              </dt>
+              <dd className="mt-1 mb-0 font-semibold text-white">
+                {moment(show.date).format("MMM Do YYYY")} ·{" "}
+                {moment(show.time, "HH:mm").format("hh:mm A")}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-[#808080]">
+                Ticket price
+              </dt>
+              <dd className="mt-1 mb-0 font-semibold text-white">
+                ₹{show.ticketPrice} each
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-[#808080]">
+                Seats
+              </dt>
+              <dd className="mt-1 mb-0 font-semibold text-white">
+                {show.totalSeats - show.bookedSeats.length} available ·{" "}
+                {show.bookedSeats.length} booked
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="px-4 py-8 sm:px-8">{getSeats()}</div>
+
+        {selectedSeats.length > 0 ? (
+          <div
+            className="border-t px-6 py-6 sm:px-8"
+            style={{
+              borderColor: cinematicTheme.colors.elevated,
+              backgroundColor: cinematicTheme.colors.backgroundSecondary,
+            }}
+          >
+            <UiButton
+              variant="primary"
+              block
+              size="large"
+              shape="round"
+              onClick={handleCheckout}
             >
-              {getSeats()}
-              {selectedSeats.length > 0 && (
-                <div className="max-width-600 mx-auto">
-                  <Button
-                    onClick={handleCheckout}
-                    type="primary"
-                    shape="round"
-                    size="large"
-                    block
-                  >
-                    Pay Now
-                  </Button>
-                </div>
-              )}
-            </Card>
-          </Col>
-        </Row>
-      )}
-    </>
+              Pay now
+            </UiButton>
+          </div>
+        ) : null}
+      </SurfaceCard>
+    </div>
   );
 };
 

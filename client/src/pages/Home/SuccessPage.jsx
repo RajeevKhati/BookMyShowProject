@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Result, Button, Spin } from "antd";
+import { Spin } from "antd";
+import { CheckCircleFilled } from "@ant-design/icons";
 import { toast } from "../../feedback/toast";
 import { axiosInstance } from "../../api";
+import { CenteredShell, SurfaceCard } from "../../components/layout";
+import { UiButton } from "../../components/ui";
+import { theme as cinematicTheme } from "../../styles/theme";
 
 const SuccessPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
+  /** pending | confirmed | leaving */
+  const [phase, setPhase] = useState("pending");
 
   useEffect(() => {
     const confirmBooking = async () => {
@@ -17,51 +21,82 @@ const SuccessPage = () => {
 
       if (!sessionId) {
         toast.error("Missing session ID");
-        return navigate("/error");
+        setPhase("leaving");
+        navigate("/error");
+        return;
       }
 
       try {
         const response = await axiosInstance.post(
           "/api/booking/confirm-booking",
-          { sessionId }
+          { sessionId },
         );
         if (response.data.success) {
-          setBookingSuccess(true);
+          setPhase("confirmed");
         } else {
+          setPhase("leaving");
           navigate("/error");
         }
       } catch (err) {
         console.error(err);
+        setPhase("leaving");
         navigate("/error");
-      } finally {
-        setLoading(false);
       }
     };
 
     confirmBooking();
-  }, [location]);
+  }, [location, navigate]);
 
-  if (loading) {
+  if (phase === "pending") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spin size="large" />
-      </div>
+      <CenteredShell>
+        <SurfaceCard className="flex min-h-[200px] items-center justify-center !py-16">
+          <Spin size="large" />
+        </SurfaceCard>
+      </CenteredShell>
+    );
+  }
+
+  if (phase === "leaving") {
+    return (
+      <CenteredShell>
+        <SurfaceCard className="flex min-h-[200px] items-center justify-center !py-16">
+          <Spin size="large" />
+        </SurfaceCard>
+      </CenteredShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50">
-      <Result
-        status="success"
-        title="Booking Successful!"
-        subTitle="Your payment was successful and your seats have been booked."
-        extra={[
-          <Button type="primary" onClick={() => navigate("/")} key="home">
-            Go Home
-          </Button>,
-        ]}
-      />
-    </div>
+    <CenteredShell className="px-6 py-12">
+      <SurfaceCard className="max-w-lg text-center !py-12 sm:!py-14">
+        <CheckCircleFilled
+          className="mb-6 text-6xl sm:text-[4.5rem]"
+          style={{ color: cinematicTheme.colors.success }}
+          aria-hidden
+        />
+        <h1 className="m-0 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          Booking confirmed
+        </h1>
+        <p
+          className="mx-auto mt-4 mb-0 max-w-md text-base leading-relaxed"
+          style={{ color: cinematicTheme.colors.textSecondary }}
+        >
+          Payment succeeded and your seats are reserved. Check your email for the
+          receipt.
+        </p>
+        <UiButton
+          variant="primary"
+          size="large"
+          shape="round"
+          block
+          className="mt-10"
+          onClick={() => navigate("/")}
+        >
+          Back to home
+        </UiButton>
+      </SurfaceCard>
+    </CenteredShell>
   );
 };
 
