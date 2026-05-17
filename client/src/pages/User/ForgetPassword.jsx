@@ -1,10 +1,19 @@
 import React from "react";
-import { Button, Form, Input, message } from "antd";
+import { Form, message } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { ForgetPassword } from "../../api/user";
+import {
+  CenteredShell,
+  InsetFooter,
+  PageHeading,
+  SurfaceCard,
+} from "../../components/layout";
+import { TextField, UiButton } from "../../components/ui";
+import { theme as cinematicTheme } from "../../styles/theme";
 
 function Forget() {
   const navigate = useNavigate();
+
   const onFinish = async (values) => {
     try {
       const response = await ForgetPassword(values);
@@ -20,47 +29,52 @@ function Forget() {
   };
 
   return (
-    <>
-      <header className="App-header">
-        <main className="main-area mw-500 text-center px-3">
-          <section className="left-section">
-            <h1>Forget Password</h1>
-          </section>
-          <section className="right-section">
-            <Form layout="vertical" onFinish={onFinish}>
-              <Form.Item
-                label="Email"
-                htmlFor="email"
-                name="email"
-                className="d-block"
-                rules={[{ required: true, message: "Email is required" }]}
-              >
-                <Input
-                  id="email"
-                  type="text"
-                  placeholder="Enter your Email"
-                ></Input>
-              </Form.Item>
-              <Form.Item className="d-block">
-                <Button
-                  type="primary"
-                  block
-                  htmlType="submit"
-                  style={{ fontSize: "1rem", fontWeight: "600" }}
-                >
-                  SEND OTP
-                </Button>
-              </Form.Item>
-            </Form>
-            <div>
-              <p>
-                Existing User? <Link to="/login">Login Here</Link>
-              </p>
-            </div>
-          </section>
-        </main>
-      </header>
-    </>
+    <CenteredShell containerClassName="max-w-[440px]">
+      <PageHeading
+        eyebrow="CineVault"
+        title="Forgot password"
+        subtitle="Enter your email and we’ll send a one-time code to reset your password."
+      />
+
+      <SurfaceCard>
+        <Form layout="vertical" onFinish={onFinish} className="text-left">
+          <Form.Item
+            label="Email"
+            htmlFor="email"
+            name="email"
+            rules={[
+              { required: true, message: "Email is required" },
+              { type: "email", message: "Please enter a valid email" },
+            ]}
+          >
+            <TextField
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+          </Form.Item>
+          <Form.Item className="mb-0">
+            <UiButton variant="primary" block htmlType="submit">
+              Send code
+            </UiButton>
+          </Form.Item>
+        </Form>
+      </SurfaceCard>
+
+      <InsetFooter>
+        <p className="m-0">
+          Remember your password?{" "}
+          <Link
+            to="/login"
+            className="font-semibold no-underline transition-colors hover:text-[#FF3D47]"
+            style={{ color: cinematicTheme.colors.primary }}
+          >
+            Sign in
+          </Link>
+        </p>
+      </InsetFooter>
+    </CenteredShell>
   );
 }
 

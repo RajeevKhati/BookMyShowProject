@@ -1,18 +1,36 @@
-import React, { useEffect } from "react";
-import { Button, Form, Input } from "antd";
+import React, { useEffect, useMemo } from "react";
+import { Form, message } from "antd";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ResetPassword } from "../../api/user";
-import { message } from "antd";
-import { useParams, useNavigate } from "react-router-dom";
+import {
+  CenteredShell,
+  InsetFooter,
+  PageHeading,
+  SurfaceCard,
+} from "../../components/layout";
+import { TextField, UiButton } from "../../components/ui";
+import { theme as cinematicTheme } from "../../styles/theme";
+
+function safeDecodeURIComponent(value) {
+  if (value == null || value === "") return "";
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
 
 function Reset() {
-  const { email } = useParams(); // Extract email from URL parameters
+  const { email } = useParams();
   const navigate = useNavigate();
+
+  const displayEmail = useMemo(() => safeDecodeURIComponent(email), [email]);
+
   const onFinish = async (values) => {
     try {
       const response = await ResetPassword(values, email);
       if (response.status === "success") {
         message.success(response.message);
-        // window.location.href = "/login";
         navigate("/login");
       } else {
         message.error(response.message);
@@ -24,60 +42,79 @@ function Reset() {
 
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      navigate("/");
+      navigate("/", { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   return (
-    <>
-      <header className="App-header">
-        <main className="main-area mw-500 text-center px-3">
-          <section className="left-section">
-            <h1>Reset Password</h1>
-          </section>
-          <section className="right-section">
-            <Form layout="vertical" onFinish={onFinish}>
-              <Form.Item
-                label="OTP"
-                htmlFor="otp"
-                name="otp"
-                className="d-block"
-                rules={[{ required: true, message: "OTP is required" }]}
-              >
-                <Input
-                  id="otp"
-                  type="number"
-                  placeholder="Enter your otp"
-                ></Input>
-              </Form.Item>
-              <Form.Item
-                label="Password"
-                htmlFor="password"
-                name="password"
-                className="d-block"
-                rules={[{ required: true, message: "Password is required" }]}
-              >
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your Password"
-                ></Input>
-              </Form.Item>
-              <Form.Item className="d-block">
-                <Button
-                  type="primary"
-                  block
-                  htmlType="submit"
-                  style={{ fontSize: "1rem", fontWeight: "600" }}
-                >
-                  RESET PASSWORD
-                </Button>
-              </Form.Item>
-            </Form>
-          </section>
-        </main>
-      </header>
-    </>
+    <CenteredShell containerClassName="max-w-[440px]">
+      <PageHeading
+        eyebrow="CineVault"
+        title="Reset password"
+        subtitle={
+          displayEmail
+            ? `Enter the code we sent and choose a new password for ${displayEmail}.`
+            : "Enter the code we sent and choose a new password."
+        }
+      />
+
+      <SurfaceCard>
+        <Form layout="vertical" onFinish={onFinish} className="text-left">
+          <Form.Item
+            label="Verification code"
+            htmlFor="otp"
+            name="otp"
+            rules={[{ required: true, message: "Code is required" }]}
+          >
+            <TextField
+              id="otp"
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="6-digit code"
+            />
+          </Form.Item>
+          <Form.Item
+            label="New password"
+            htmlFor="password"
+            name="password"
+            rules={[{ required: true, message: "Password is required" }]}
+          >
+            <TextField
+              id="password"
+              password
+              autoComplete="new-password"
+              placeholder="Choose a strong password"
+            />
+          </Form.Item>
+          <Form.Item className="mb-0">
+            <UiButton variant="primary" block htmlType="submit">
+              Update password
+            </UiButton>
+          </Form.Item>
+        </Form>
+      </SurfaceCard>
+
+      <InsetFooter className="space-y-2">
+        <p className="m-0">
+          <Link
+            to="/login"
+            className="font-semibold no-underline transition-colors hover:text-[#FF3D47]"
+            style={{ color: cinematicTheme.colors.primary }}
+          >
+            Back to sign in
+          </Link>
+        </p>
+        <p className="m-0">
+          <Link
+            to="/forget"
+            className="font-semibold text-[#B3B3B3] no-underline transition-colors hover:text-white"
+          >
+            Didn&apos;t receive a code?
+          </Link>
+        </p>
+      </InsetFooter>
+    </CenteredShell>
   );
 }
 
