@@ -1,104 +1,201 @@
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   BookOutlined,
-  DownOutlined,
+  DashboardOutlined,
   HomeOutlined,
   LogoutOutlined,
+  MenuOutlined,
   ProfileOutlined,
-  UserOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
-import { Avatar, Dropdown, Layout } from "antd";
+import { Dropdown, Layout } from "antd";
 import { useMemo } from "react";
 import { theme as cinematicTheme } from "../../styles/theme";
+import { getStaffWorkspacePath } from "../../utils/dashboardPath";
 
-function UserNavDropdown({ userName, userRole, onSelect }) {
-  const items = useMemo(() => {
-    const base = [
-      {
-        key: "profile",
-        icon: <ProfileOutlined className="text-[#B3B3B3]" />,
-        label: "My profile",
-      },
-    ];
-    if (userRole === "user") {
-      base.push({
-        key: "bookings",
-        icon: <BookOutlined className="text-[#B3B3B3]" />,
-        label: "My bookings",
-      });
-    }
-    base.push(
-      { type: "divider" },
-      {
-        key: "logout",
-        danger: true,
-        icon: <LogoutOutlined />,
-        label: "Log out",
-      },
-    );
-    return base;
-  }, [userRole]);
+function shellNavInactiveColor() {
+  return cinematicTheme.colors.textSecondary;
+}
 
-  const displayName = userName?.trim() || "Account";
+function DesktopShellNav({ userRole, workspacePath, onLogout }) {
+  const navClass = ({ isActive }) =>
+    [
+      "inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold no-underline transition-colors hover:bg-[#262626] hover:text-white",
+      isActive ? "bg-[#262626]" : "",
+    ].join(" ");
+
+  const navStyle = ({ isActive }) => ({
+    color: isActive ? cinematicTheme.colors.text : shellNavInactiveColor(),
+  });
 
   return (
-    <Dropdown
-      menu={{
-        items,
-        onClick: ({ key }) => onSelect(key),
-      }}
-      placement="bottomRight"
-      trigger={["hover", "click"]}
-      overlayStyle={{ minWidth: 200 }}
-      dropdownRender={(menu) => (
-        <div
-          className="overflow-hidden rounded-xl border shadow-[0_12px_40px_rgba(0,0,0,0.65)]"
-          style={{
-            backgroundColor: cinematicTheme.colors.card,
-            borderColor: cinematicTheme.colors.elevated,
-          }}
-        >
-          {menu}
-        </div>
-      )}
+    <nav
+      className="hidden items-center gap-1 md:flex"
+      aria-label="Primary navigation"
     >
+      <NavLink
+        end
+        to="/"
+        className={navClass}
+        style={navStyle}
+      >
+        <HomeOutlined />
+        Home
+      </NavLink>
+
+      {userRole === "user" && (
+        <NavLink
+          to="/bookings"
+          className={navClass}
+          style={navStyle}
+        >
+          <BookOutlined />
+          Bookings
+        </NavLink>
+      )}
+
+      {workspacePath ? (
+        <NavLink
+          to={workspacePath}
+          className={navClass}
+          style={navStyle}
+        >
+          {userRole === "admin" ? (
+            <>
+              <DashboardOutlined />
+              Admin panel
+            </>
+          ) : (
+            <>
+              <ShopOutlined />
+              Partner hub
+            </>
+          )}
+        </NavLink>
+      ) : null}
+
+      <NavLink
+        to="/profile"
+        className={navClass}
+        style={navStyle}
+      >
+        <ProfileOutlined />
+        Account
+      </NavLink>
+
       <button
         type="button"
-        className="ml-1 inline-flex max-w-[min(100%,280px)] cursor-pointer items-center gap-2 rounded-xl border px-2 py-1.5 text-left transition-colors hover:bg-[#262626] sm:ml-2 sm:px-3 sm:py-2"
-        style={{
-          borderColor: "transparent",
-          color: cinematicTheme.colors.textSecondary,
-        }}
-        aria-haspopup="menu"
-        aria-label={`Account menu for ${displayName}`}
+        onClick={onLogout}
+        className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-none bg-transparent px-3 py-2 text-sm font-semibold transition-colors hover:bg-[#262626]"
+        style={{ color: cinematicTheme.colors.error }}
       >
-        <Avatar
-          size={36}
-          icon={<UserOutlined />}
-          className="shrink-0"
-          style={{
-            backgroundColor: cinematicTheme.colors.elevated,
-            color: cinematicTheme.colors.text,
-          }}
-        />
-        <span className="hidden min-w-0 flex-1 truncate text-sm font-semibold text-[#E8E8E8] sm:inline">
-          {displayName}
-        </span>
-        <DownOutlined className="shrink-0 text-[10px] opacity-60" />
+        <LogoutOutlined />
+        Log out
       </button>
-    </Dropdown>
+    </nav>
   );
 }
 
-UserNavDropdown.propTypes = {
-  userName: PropTypes.string,
+DesktopShellNav.propTypes = {
+  userRole: PropTypes.string,
+  workspacePath: PropTypes.string,
+  onLogout: PropTypes.func.isRequired,
+};
+
+DesktopShellNav.defaultProps = {
+  userRole: undefined,
+  workspacePath: undefined,
+};
+
+function MobileShellNav({ userRole, onSelect }) {
+  const items = useMemo(() => {
+    const grayIcon = "text-[#B3B3B3]";
+    const list = [
+      {
+        key: "home",
+        icon: <HomeOutlined className={grayIcon} />,
+        label: "Home",
+      },
+    ];
+    if (userRole === "user") {
+      list.push({
+        key: "bookings",
+        icon: <BookOutlined className={grayIcon} />,
+        label: "My bookings",
+      });
+    }
+    if (userRole === "admin") {
+      list.push({
+        key: "workspace",
+        icon: <DashboardOutlined className={grayIcon} />,
+        label: "Admin panel",
+      });
+    }
+    if (userRole === "partner") {
+      list.push({
+        key: "workspace",
+        icon: <ShopOutlined className={grayIcon} />,
+        label: "Partner hub",
+      });
+    }
+    list.push({
+      key: "account",
+      icon: <ProfileOutlined className={grayIcon} />,
+      label: "Account",
+    });
+    list.push({ type: "divider" });
+    list.push({
+      key: "logout",
+      danger: true,
+      icon: <LogoutOutlined />,
+      label: "Log out",
+    });
+    return list;
+  }, [userRole]);
+
+  return (
+    <div className="md:hidden">
+      <Dropdown
+        menu={{
+          items,
+          onClick: ({ key }) => onSelect(key),
+        }}
+        placement="bottomRight"
+        trigger={["click"]}
+        overlayStyle={{ minWidth: 220 }}
+        dropdownRender={(menu) => (
+          <div
+            className="overflow-hidden rounded-xl border shadow-[0_12px_40px_rgba(0,0,0,0.65)]"
+            style={{
+              backgroundColor: cinematicTheme.colors.card,
+              borderColor: cinematicTheme.colors.elevated,
+            }}
+          >
+            {menu}
+          </div>
+        )}
+      >
+        <button
+          type="button"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#E8E8E8] transition-colors hover:bg-[#262626]"
+          style={{ borderColor: "transparent" }}
+          aria-haspopup="menu"
+          aria-label="Open navigation menu"
+        >
+          <MenuOutlined className="text-lg" />
+        </button>
+      </Dropdown>
+    </div>
+  );
+}
+
+MobileShellNav.propTypes = {
   userRole: PropTypes.string,
   onSelect: PropTypes.func.isRequired,
 };
 
-UserNavDropdown.defaultProps = {
-  userName: undefined,
+MobileShellNav.defaultProps = {
   userRole: undefined,
 };
 
@@ -108,11 +205,7 @@ UserNavDropdown.defaultProps = {
 function AppShell({ user, onPrimaryNav, children }) {
   const { Header } = Layout;
 
-  const navClusterClass =
-    "flex shrink-0 items-center gap-1 sm:gap-2 md:ml-auto";
-
-  const homeNavClass =
-    "inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold no-underline transition-colors hover:bg-[#262626] hover:text-white";
+  const workspacePath = getStaffWorkspacePath(user?.role);
 
   return (
     <Layout className="min-h-screen bg-[#0F0F0F]">
@@ -134,18 +227,13 @@ function AppShell({ user, onPrimaryNav, children }) {
           <span style={{ color: cinematicTheme.colors.text }}>Vault</span>
         </Link>
 
-        <div className={`${navClusterClass} flex-1 justify-end`}>
-          <Link
-            to="/"
-            className={homeNavClass}
-            style={{ color: cinematicTheme.colors.textSecondary }}
-          >
-            <HomeOutlined />
-            <span className="hidden sm:inline">Home</span>
-          </Link>
-
-          <UserNavDropdown
-            userName={user?.name}
+        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3 md:ml-auto">
+          <DesktopShellNav
+            userRole={user?.role}
+            workspacePath={workspacePath ?? undefined}
+            onLogout={() => onPrimaryNav("logout")}
+          />
+          <MobileShellNav
             userRole={user?.role}
             onSelect={(key) => onPrimaryNav(key)}
           />

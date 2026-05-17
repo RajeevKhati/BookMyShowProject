@@ -6,10 +6,13 @@ import { GetCurrentUser } from "../api/user";
 import { toast } from "../feedback/toast";
 import { setUser } from "../redux/userSlice";
 import AppShell from "./layout/AppShell";
-import { getDashboardPath } from "../utils/dashboardPath";
+import {
+  getDashboardPath,
+  getStaffWorkspacePath,
+} from "../utils/dashboardPath";
 
 /** Re-export for callers that derive navigation from role */
-export { getDashboardPath } from "../utils/dashboardPath";
+export { getDashboardPath, getStaffWorkspacePath } from "../utils/dashboardPath";
 
 /** Open route if `allowedRoles` empty; otherwise require one of those roles */
 function allowsRole(user, allowedRoles) {
@@ -77,8 +80,13 @@ function ProtectedRoute({ children, allowedRoles }) {
         navigate("/");
         return;
       }
-      if (key === "profile") {
-        navigate(getDashboardPath(user.role));
+      if (key === "account") {
+        navigate("/profile");
+        return;
+      }
+      if (key === "workspace") {
+        const path = getStaffWorkspacePath(user.role);
+        if (path) navigate(path);
         return;
       }
       if (key === "bookings") {
