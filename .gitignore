@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 **/.env
+
+FEATURE_SUBMISSION_CHECKLIST.md
+.cursorrules
+# Any `docs/` directory (root, client/docs, etc.)
+docs/

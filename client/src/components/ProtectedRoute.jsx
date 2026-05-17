@@ -118,7 +118,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
             }}
           >
             <h3 className="demo-logo text-white m-0" style={{ color: "white" }}>
-              Book My Show
+              CineVault
             </h3>
             <Menu
               theme="dark"

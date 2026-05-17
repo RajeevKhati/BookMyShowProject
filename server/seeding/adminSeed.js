@@ -23,7 +23,7 @@ async function seedAdminUser(options = {}) {
   const { logger = console, strict = true } = options;
   const dbURL = process.env.DB_URL;
   const password = process.env.SEED_ADMIN_PASSWORD;
-  const email = (process.env.SEED_ADMIN_EMAIL || "admin@bookmyshow.dev")
+  const email = (process.env.SEED_ADMIN_EMAIL || "admin@cinevault.dev")
     .toLowerCase()
     .trim();
   const name = process.env.SEED_ADMIN_NAME || "Admin";

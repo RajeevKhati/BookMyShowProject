@@ -1,6 +1,6 @@
-# BookMyShow-Project — Architecture & Feature Overview
+# CineVault — Architecture & Feature Overview
 
-This document describes the **BookMyShow-Project** codebase: architecture, roles, data model, APIs, main user flows, and technologies covered.
+This document describes the **CineVault** codebase: architecture, roles, data model, APIs, main user flows, and technologies covered.
 
 ---
 
@@ -272,7 +272,7 @@ When extending the app, watch for field-name alignment between UI and Mongoose (
 
 ```mermaid
 mindmap
-  root((BookMyShow-Project))
+  root((CineVault))
     Presentation
       React SPA
       Ant Design UI
@@ -295,4 +295,4 @@ mindmap
 
 ---
 
-*Generated for the BookMyShow-Project repository. Mermaid diagrams render in GitHub, many IDEs, and documentation tools that support Mermaid.*
+*Generated for the CineVault project repository. Mermaid diagrams render in GitHub, many IDEs, and documentation tools that support Mermaid.*
