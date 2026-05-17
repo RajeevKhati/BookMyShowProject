@@ -1,14 +1,25 @@
 import PropTypes from "prop-types";
-import { ConfigProvider } from "antd";
+import { App, ConfigProvider } from "antd";
+import GlobalLoader from "../components/GlobalLoader";
+import NotifyHost from "../components/NotifyHost";
 import { antdAppThemeConfig } from "../styles/antdTheme";
+import "../styles/feedback.css";
 
 /**
- * Root composition for cross-cutting providers (antd theme, locale, etc.).
- * Keep this shallow—add Redux/router here only if consolidating entry wiring.
+ * Theme, `message` / `notification` context (placement, duration), global loader.
  */
 function AppProviders({ children }) {
   return (
-    <ConfigProvider theme={antdAppThemeConfig}>{children}</ConfigProvider>
+    <ConfigProvider theme={antdAppThemeConfig}>
+      <App
+        message={{ top: 24, maxCount: 4, duration: 4 }}
+        notification={{ placement: "topRight", top: 24, duration: 4 }}
+      >
+        <NotifyHost />
+        <GlobalLoader />
+        {children}
+      </App>
+    </ConfigProvider>
   );
 }
 

@@ -2,9 +2,8 @@ import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
 import { GetCurrentUser } from "../api/user";
-import { hideLoading, showLoading } from "../redux/loaderSlice";
+import { toast } from "../feedback/toast";
 import { setUser } from "../redux/userSlice";
 import AppShell from "./layout/AppShell";
 import { getDashboardPath } from "../utils/dashboardPath";
@@ -36,7 +35,6 @@ function ProtectedRoute({ children, allowedRoles }) {
       return;
     }
     try {
-      dispatch(showLoading());
       const payload = await GetCurrentUser();
 
       const nextUser =
@@ -46,17 +44,17 @@ function ProtectedRoute({ children, allowedRoles }) {
         dispatch(setUser(nextUser));
       } else {
         throw new Error(
-          payload?.message || "Unable to restore your session. Please sign in again.",
+          payload?.message ||
+            "Unable to restore your session. Please sign in again.",
         );
       }
     } catch (error) {
       dispatch(setUser(null));
       navigate("/login");
-      message.error(
+      toast.error(
         error instanceof Error ? error.message : "Please sign in again.",
       );
     } finally {
-      dispatch(hideLoading());
       setSessionChecked(true);
     }
   }, [dispatch, navigate]);
@@ -68,7 +66,7 @@ function ProtectedRoute({ children, allowedRoles }) {
   useEffect(() => {
     if (!user || !allowedRoles?.length) return;
     if (allowedRoles.includes(user.role)) return;
-    message.warning("You don't have permission to access this area.");
+    toast.warning("You don't have permission to access this area.");
     navigate(getDashboardPath(user.role), { replace: true });
   }, [user, allowedRoles, navigate]);
 

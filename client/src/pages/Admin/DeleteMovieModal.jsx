@@ -1,7 +1,6 @@
-import { Modal, message } from "antd";
+import { Modal } from "antd";
 import { deleteMovie } from "../../api/movie";
-import { showLoading, hideLoading } from "../../redux/loaderSlice";
-import { useDispatch } from "react-redux";
+import { toast } from "../../feedback/toast";
 
 const DeleteMovieModal = ({
   isDeleteModalOpen,
@@ -10,25 +9,18 @@ const DeleteMovieModal = ({
   setSelectedMovie,
   getData,
 }) => {
-  const dispatch = useDispatch();
   const handleOk = async () => {
     try {
-      dispatch(showLoading());
       const movieId = selectedMovie._id;
       const response = await deleteMovie({ movieId });
       if (response.success) {
-        message.success(response.message);
+        toast.success(response.message);
         getData();
-      } else {
-        message.error(response.message);
       }
       setSelectedMovie(null);
       setIsDeleteModalOpen(false);
-      dispatch(hideLoading());
     } catch (err) {
-      dispatch(hideLoading());
       setIsDeleteModalOpen(false);
-      message.error(err.message);
     }
   };
   const handleCancel = () => {
@@ -43,10 +35,7 @@ const DeleteMovieModal = ({
       onOk={handleOk}
       onCancel={handleCancel}
     >
-      <p className="pt-3 fs-18">Are you sure you want to delete this movie?</p>
-      <p className="pb-3 fs-18">
-        This action can't be undone and you'll lose this movie data.
-      </p>
+      <p>Are you sure you want to delete this movie?</p>
     </Modal>
   );
 };

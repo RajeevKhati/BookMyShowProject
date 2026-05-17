@@ -1,7 +1,8 @@
 import React from "react";
-import { Form, message } from "antd";
+import { Form } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { ForgetPassword } from "../../api/user";
+import { toast } from "../../feedback/toast";
 import {
   CenteredShell,
   InsetFooter,
@@ -18,13 +19,13 @@ function Forget() {
     try {
       const response = await ForgetPassword(values);
       if (response.status === "success") {
-        message.success(response.message);
+        toast.success(response.message);
         navigate(`/reset/${encodeURIComponent(values.email)}`);
       } else {
-        message.error(response.message);
+        toast.error(response.message);
       }
-    } catch (error) {
-      message.error(error.message);
+    } catch {
+      // HTTP/network failures: toast via axios error interceptor.
     }
   };
 

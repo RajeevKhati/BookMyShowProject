@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo } from "react";
-import { Form, message } from "antd";
+import { Form } from "antd";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ResetPassword } from "../../api/user";
+import { toast } from "../../feedback/toast";
 import {
   CenteredShell,
   InsetFooter,
@@ -30,13 +31,13 @@ function Reset() {
     try {
       const response = await ResetPassword(values, email);
       if (response.status === "success") {
-        message.success(response.message);
+        toast.success(response.message);
         navigate("/login");
       } else {
-        message.error(response.message);
+        toast.error(response.message);
       }
-    } catch (error) {
-      message.error(error.message);
+    } catch {
+      // HTTP/network failures: toast via axios error interceptor.
     }
   };
 

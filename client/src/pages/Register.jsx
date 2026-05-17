@@ -1,7 +1,8 @@
 import React from "react";
-import { Form, message, Radio } from "antd";
+import { Form, Radio } from "antd";
 import { Link } from "react-router-dom";
 import { RegisterUser } from "../api/user";
+import { toast } from "../feedback/toast";
 import {
   CenteredShell,
   InsetFooter,
@@ -20,12 +21,10 @@ function Register() {
     try {
       const response = await RegisterUser(values);
       if (response.success) {
-        message.success(response.message);
-      } else {
-        message.error(response.message);
+        toast.success(response.message);
       }
-    } catch (error) {
-      message.error(error.message);
+    } catch {
+      // Register failures: toast via axios interceptors.
     }
   };
 

@@ -1,0 +1,63 @@
+/* Pin antd Message to top-right.
+   The Message layer is rendered in a portal on document.body (not under .ant-app),
+   so we must not scope these rules under .ant-app or they never match. */
+.ant-message {
+  left: auto !important;
+  right: 24px !important;
+  top: 24px;
+  transform: none !important;
+  width: auto;
+  max-width: min(420px, calc(100vw - 48px));
+}
+
+.ant-message-notice-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/*
+ * Default antd motion is `ant-message-move-up` with MessageMoveIn (slides vertically).
+ * For top-right placement, slide in/out horizontally (rc-motion class names stay the same).
+ * Motion name comes from antd `getMotion()` → `${prefixCls}-move-up` (see antd message/util.js).
+ */
+@keyframes cv-message-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 16px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cv-message-slide-out-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 16px));
+  }
+}
+
+.ant-message-move-up-appear,
+.ant-message-move-up-enter {
+  animation-name: cv-message-slide-in-right !important;
+  animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1) !important;
+}
+
+.ant-message-move-up-appear.ant-message-move-up-appear-active,
+.ant-message-move-up-enter.ant-message-move-up-enter-active {
+  animation-name: cv-message-slide-in-right !important;
+}
+
+.ant-message-move-up-leave {
+  animation-name: cv-message-slide-out-right !important;
+  animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1) !important;
+}
+
+.ant-message-move-up-leave.ant-message-move-up-leave-active {
+  animation-name: cv-message-slide-out-right !important;
+}

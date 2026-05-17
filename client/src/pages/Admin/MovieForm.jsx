@@ -1,8 +1,7 @@
-import { Col, Modal, Row, Form, Input, Select, Button, message } from "antd";
+import { Col, Modal, Row, Form, Input, Select, Button } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import { showLoading, hideLoading } from "../../redux/loaderSlice";
-import { useDispatch } from "react-redux";
 import { addMovie, updateMovie } from "../../api/movie";
+import { toast } from "../../feedback/toast";
 import moment from "moment";
 
 const MovieForm = ({
@@ -13,7 +12,6 @@ const MovieForm = ({
   formType,
   getData,
 }) => {
-  const dispatch = useDispatch();
   if (selectedMovie) {
     selectedMovie.releaseDate = moment(selectedMovie.releaseDate).format(
       "YYYY-MM-DD"
@@ -22,7 +20,6 @@ const MovieForm = ({
 
   const onFinish = async (values) => {
     try {
-      dispatch(showLoading());
       let response = null;
       if (formType === "add") {
         response = await addMovie(values);
@@ -31,16 +28,12 @@ const MovieForm = ({
       }
       if (response.success) {
         getData();
-        message.success(response.message);
+        toast.success(response.message);
         setIsModalOpen(false);
-      } else {
-        message.error(response.message);
       }
       setSelectedMovie(null);
-      dispatch(hideLoading());
     } catch (err) {
-      dispatch(hideLoading());
-      message.error(err.message);
+      // Errors surfaced by axios interceptors.
     }
   };
 

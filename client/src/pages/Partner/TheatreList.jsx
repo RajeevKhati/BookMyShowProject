@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, message } from "antd";
+import { Table, Button } from "antd";
 import TheatreFormModal from "./TheatreFormModal";
 import DeleteTheatreModal from "./DeleteTheatreModal";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { getAllTheatres } from "../../api/theatre";
-import { useSelector, useDispatch } from "react-redux";
-import { showLoading, hideLoading } from "../../redux/loaderSlice";
+import { useSelector } from "react-redux";
+import { toast } from "../../feedback/toast";
 import ShowModal from "./ShowModal";
 
 const TheatreList = () => {
@@ -17,11 +17,8 @@ const TheatreList = () => {
   const [formType, setFormType] = useState("add");
   const [theatres, setTheatres] = useState(null);
 
-  const dispatch = useDispatch();
-
   const getData = async () => {
     try {
-      dispatch(showLoading());
       const response = await getAllTheatres(user._id);
       if (response.success) {
         const allTheatres = response.data;
@@ -32,12 +29,10 @@ const TheatreList = () => {
           })
         );
       } else {
-        message.error(response.message);
+        toast.error(response.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      dispatch(hideLoading());
-      message.error(err.message);
+      toast.error(err.message);
     }
   };
   useEffect(() => {

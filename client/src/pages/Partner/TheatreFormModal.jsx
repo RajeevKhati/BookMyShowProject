@@ -1,8 +1,8 @@
-import { Col, Modal, Row, Form, Input, Select, Button, message } from "antd";
+import { Col, Modal, Row, Form, Input, Select, Button } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import { showLoading, hideLoading } from "../../redux/loaderSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { addTheatre, updateTheatre } from "../../api/theatre";
+import { toast } from "../../feedback/toast";
 
 const TheatreFormModal = ({
   isModalOpen,
@@ -12,11 +12,9 @@ const TheatreFormModal = ({
   formType,
   getData,
 }) => {
-  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const onFinish = async (values) => {
     try {
-      dispatch(showLoading());
       let response = null;
       if (formType === "add") {
         response = await addTheatre({ ...values, owner: user._id });
@@ -26,16 +24,12 @@ const TheatreFormModal = ({
       }
       if (response.success) {
         getData();
-        message.success(response.message);
+        toast.success(response.message);
         setIsModalOpen(false);
-      } else {
-        message.error(response.message);
       }
       setSelectedTheatre(null);
-      dispatch(hideLoading());
     } catch (err) {
-      dispatch(hideLoading());
-      message.error(err.message);
+      // Errors surfaced by axios interceptors.
     }
   };
   const handleCancel = () => {

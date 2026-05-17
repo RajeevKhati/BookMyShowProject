@@ -1,7 +1,8 @@
 import React from "react";
-import { Form, message } from "antd";
+import { Form } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { LoginUser } from "../api/user";
+import { toast } from "../feedback/toast";
 import {
   CenteredShell,
   InsetFooter,
@@ -15,18 +16,15 @@ function Login() {
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
-    console.log(values);
     try {
       const response = await LoginUser(values);
-      if (response.success) {
+      if (response?.success) {
         localStorage.setItem("token", response.data);
-        message.success(response.message);
+        toast.success(response.message);
         navigate("/");
-      } else {
-        message.error(response.message);
       }
-    } catch (error) {
-      message.error(error.message);
+    } catch {
+      // Failed login (network / HTTP error): toast via axios error interceptor.
     }
   };
 

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { hideLoading, showLoading } from "../../redux/loaderSlice";
+import { useSelector } from "react-redux";
 import { getShowById } from "../../api/show";
 import { useNavigate, useParams } from "react-router-dom";
-import { message, Card, Row, Col, Button } from "antd";
+import { Card, Row, Col, Button } from "antd";
+import { toast } from "../../feedback/toast";
 import moment from "moment";
 import { axiosInstance } from "../../api";
 import { loadStripe } from "@stripe/stripe-js";
@@ -14,7 +14,6 @@ const stripePromise = loadStripe(
 
 const BookShow = () => {
   const { user } = useSelector((state) => state.user);
-  const dispatch = useDispatch();
   const [show, setShow] = useState();
   const [selectedSeats, setSelectedSeats] = useState([]);
   const params = useParams();
@@ -22,17 +21,14 @@ const BookShow = () => {
 
   const getData = async () => {
     try {
-      dispatch(showLoading());
       const response = await getShowById({ showId: params.id });
       if (response.success) {
         setShow(response.data);
       } else {
-        message.error(response.message);
+        toast.error(response.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      message.error(err.message);
-      dispatch(hideLoading());
+      toast.error(err.message);
     }
   };
 
@@ -106,7 +102,6 @@ const BookShow = () => {
 
   const handleCheckout = async () => {
     try {
-      dispatch(showLoading());
       const response = await axiosInstance.post(
         "/api/booking/create-checkout-session",
         {
@@ -115,12 +110,9 @@ const BookShow = () => {
           ticketPrice: show.ticketPrice,
         }
       );
-      dispatch(hideLoading());
       window.location.href = response.data.url;
     } catch (err) {
-      dispatch(hideLoading());
       console.error(err);
-      message.error("Checkout initiation failed");
     }
   };
 

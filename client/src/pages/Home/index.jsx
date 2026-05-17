@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { hideLoading, showLoading } from "../../redux/loaderSlice";
-import { useDispatch } from "react-redux";
 import { getAllMovies } from "../../api/movie";
-import { message, Row, Col, Input } from "antd";
+import { toast } from "../../feedback/toast";
+import { Row, Col, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import { SearchOutlined } from "@ant-design/icons";
 import moment from "moment";
@@ -10,22 +9,18 @@ import moment from "moment";
 const Home = () => {
   const [movies, setMovies] = useState(null);
   const [searchText, setSearchText] = useState("");
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const getData = async () => {
     try {
-      dispatch(showLoading());
       const response = await getAllMovies();
       if (response.success) {
         setMovies(response.data);
       } else {
-        message.error(response.message);
+        toast.error(response.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      message.error(err.message);
-      dispatch(hideLoading());
+      toast.error(err.message);
     }
   };
   useEffect(() => {

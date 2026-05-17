@@ -7,18 +7,13 @@ import {
   Button,
   Select,
   Table,
-  message,
 } from "antd";
-import { showLoading, hideLoading } from "../../redux/loaderSlice";
-import { useDispatch } from "react-redux";
-// import { addTheatre, updateTheatre } from '../../apicalls/theatres';
 import {
   ArrowLeftOutlined,
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-// import { useSelector } from 'react-redux';
 import { getAllMovies } from "../../api/movie";
 import {
   addShow,
@@ -26,6 +21,7 @@ import {
   getShowsByTheatre,
   updateShow,
 } from "../../api/show";
+import { toast } from "../../feedback/toast";
 import moment from "moment";
 
 const ShowModal = ({
@@ -38,16 +34,14 @@ const ShowModal = ({
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [shows, setShows] = useState(null);
   const [selectedShow, setSelectedShow] = useState(null);
-  const dispatch = useDispatch();
 
   const getData = async () => {
     try {
-      dispatch(showLoading());
       const movieResponse = await getAllMovies();
       if (movieResponse.success) {
         setMovies(movieResponse.data);
       } else {
-        message.error(movieResponse.message);
+        toast.error(movieResponse.message);
       }
       const showResponse = await getShowsByTheatre({
         theatreId: selectedTheatre._id,
@@ -55,17 +49,14 @@ const ShowModal = ({
       if (showResponse.success) {
         setShows(showResponse.data);
       } else {
-        message.error(showResponse.message);
+        toast.error(showResponse.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      message.error(err.message);
-      dispatch(hideLoading());
+      toast.error(err.message);
     }
   };
   const onFinish = async (values) => {
     try {
-      dispatch(showLoading());
       let response = null;
       if (view === "form") {
         response = await addShow({ ...values, theatre: selectedTheatre._id });
@@ -79,15 +70,11 @@ const ShowModal = ({
       }
       if (response.success) {
         getData();
-        message.success(response.message);
+        toast.success(response.message);
         setView("table");
-      } else {
-        message.error(response.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      message.error(err.message);
-      dispatch(hideLoading());
+      // Errors surfaced by axios interceptors.
     }
   };
   const handleCancel = () => {
@@ -95,18 +82,13 @@ const ShowModal = ({
   };
   const handleDelete = async (showId) => {
     try {
-      dispatch(showLoading());
       const response = await deleteShow({ showId: showId });
       if (response.success) {
-        message.success(response.message);
+        toast.success(response.message);
         getData();
-      } else {
-        message.error(response.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      message.error(err.message);
-      dispatch(hideLoading());
+      // Errors surfaced by axios interceptors.
     }
   };
   const columns = [

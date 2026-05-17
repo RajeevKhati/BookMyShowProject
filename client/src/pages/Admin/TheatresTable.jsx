@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
 import { getAllTheatresForAdmin, updateTheatre } from "../../api/theatre";
-import { showLoading, hideLoading } from "../../redux/loaderSlice";
-import { useDispatch } from "react-redux";
-import { message, Button, Table, Empty } from "antd";
+import { toast } from "../../feedback/toast";
+import { Button, Table, Empty } from "antd";
 
 const TheatresTable = () => {
   const [theatres, setTheatres] = useState([]);
-  const dispatch = useDispatch();
   const getData = async () => {
     try {
-      dispatch(showLoading());
       const response = await getAllTheatresForAdmin();
       if (response.success) {
         const allTheatres = response.data ?? [];
@@ -19,32 +16,25 @@ const TheatresTable = () => {
           })
         );
       } else {
-        message.error(response.message);
+        toast.error(response.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      dispatch(hideLoading());
-      message.error(err.message);
+      toast.error(err.message);
     }
   };
   const handleStatusChange = async (theatre) => {
     try {
-      dispatch(showLoading());
       const payload = {
         theatreId: theatre._id,
         isActive: !theatre.isActive,
       };
       const response = await updateTheatre(payload);
       if (response.success) {
-        message.success(response.message);
+        toast.success(response.message);
         getData();
-      } else {
-        message.error(response?.message || "Could not update theatre status");
       }
-      dispatch(hideLoading());
     } catch (err) {
-      dispatch(hideLoading());
-      message.error(err.message);
+      // Errors surfaced by axios interceptors (includes `success: false` bodies).
     }
   };
   const columns = [

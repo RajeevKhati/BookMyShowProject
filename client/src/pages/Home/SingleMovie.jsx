@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getMovieById } from "../../api/movie";
-import { useDispatch } from "react-redux";
-import { hideLoading, showLoading } from "../../redux/loaderSlice";
-import { message, Input, Divider, Row, Col } from "antd";
+import { Input, Divider, Row, Col } from "antd";
+import { toast } from "../../feedback/toast";
 import { CalendarOutlined } from "@ant-design/icons";
 import moment from "moment";
 import { getAllTheatresByMovie } from "../../api/show";
@@ -13,7 +12,6 @@ const SingleMovie = () => {
   const [movie, setMovie] = useState();
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
   const [theatres, setTheatres] = useState([]);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const handleDate = (e) => {
     setDate(moment(e.target.value).format("YYYY-MM-DD"));
@@ -22,33 +20,27 @@ const SingleMovie = () => {
 
   const getData = async () => {
     try {
-      dispatch(showLoading());
       const response = await getMovieById(params.id);
       if (response.success) {
         setMovie(response.data);
       } else {
-        message.error(response.message);
+        toast.error(response.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      message.error(err.message);
-      dispatch(hideLoading());
+      toast.error(err.message);
     }
   };
 
   const getAllTheatres = async () => {
     try {
-      dispatch(showLoading());
       const response = await getAllTheatresByMovie({ movie: params.id, date });
       if (response.success) {
         setTheatres(response.data);
       } else {
-        message.error(response.message);
+        toast.error(response.message);
       }
-      dispatch(hideLoading());
     } catch (err) {
-      dispatch(hideLoading());
-      message.error(err.message);
+      toast.error(err.message);
     }
   };
 

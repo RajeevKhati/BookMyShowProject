@@ -1,20 +1,28 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+/**
+ * Axios interceptors increment/decrement pendingRequests.
+ * Loader overlay shows when pendingRequests > 0.
+ */
 const loaderSlice = createSlice({
-  name: "loaders", // Name of the slice, used for action type prefixes
+  name: "loaders",
   initialState: {
-    loading: false, // Initial state
+    pendingRequests: 0,
   },
   reducers: {
-    // Reducer to show loading spinner
     showLoading: (state) => {
-      state.loading = true;
+      state.pendingRequests += 1;
     },
     hideLoading: (state) => {
-      state.loading = false;
+      state.pendingRequests = Math.max(0, state.pendingRequests - 1);
     },
   },
 });
 
 export const { showLoading, hideLoading } = loaderSlice.actions;
+
+/** Derive loading flag for UI (ref-count safe). */
+export const selectIsGlobalLoading = (state) =>
+  state.loader.pendingRequests > 0;
+
 export default loaderSlice.reducer;

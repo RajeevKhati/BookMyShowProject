@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button, Table } from "antd";
 import MovieForm from "./MovieForm";
-import { hideLoading, showLoading } from "../../redux/loaderSlice";
 import { getAllMovies } from "../../api/movie";
-import { useDispatch } from "react-redux";
 import moment from "moment";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import DeleteMovieModal from "./DeleteMovieModal";
@@ -14,7 +12,6 @@ function MovieList() {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [formType, setFormType] = useState("add");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const dispatch = useDispatch();
 
   const tableHeadings = [
     {
@@ -90,7 +87,6 @@ function MovieList() {
   ];
 
   const getData = async () => {
-    dispatch(showLoading());
     const response = await getAllMovies();
     const allMovies = response.data;
     setMovies(
@@ -98,7 +94,6 @@ function MovieList() {
         return { ...item, key: `movie${item._id}` };
       })
     );
-    dispatch(hideLoading());
   };
 
   useEffect(() => {

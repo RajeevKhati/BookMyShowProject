@@ -1,61 +1,32 @@
 import { axiosInstance } from ".";
-//Register new User
+
 export const RegisterUser = async (value) => {
-  try {
-    const response = await axiosInstance.post("/api/users/register", value);
-    return response.data;
-  } catch (err) {
-    console.log(err);
-  }
+  const response = await axiosInstance.post("/api/users/register", value);
+  return response.data;
 };
 
 export const LoginUser = async (value) => {
-  try {
-    const response = await axiosInstance.post("/api/users/login", value);
-    return response.data;
-  } catch (error) {
-    console.log(error);
-  }
+  const response = await axiosInstance.post("/api/users/login", value);
+  return response.data;
 };
 
 export const GetCurrentUser = async () => {
-  try {
-    const response = await axiosInstance.get("/api/users/get-current-user");
-    return response.data;
-  } catch (error) {
-    console.log(error);
-  }
+  const response = await axiosInstance.get("/api/users/get-current-user");
+  return response.data;
 };
 
 export const ForgetPassword = async (value) => {
-  try {
-    const response = await axiosInstance.patch(
-      "/api/users/forgetpassword",
-      value
-    );
-    return response.data;
-  } catch (error) {
-    const data = error.response?.data;
-    if (data?.message != null) {
-      return {
-        status: data.status ?? "failure",
-        message: data.message,
-      };
-    }
-    return {
-      status: "failure",
-      message: error.message || "Something went wrong. Please try again.",
-    };
-  }
+  const response = await axiosInstance.patch(
+    "/api/users/forgetpassword",
+    value,
+  );
+  return response.data;
 };
+
 export const ResetPassword = async (value, id) => {
-  try {
-    const response = await axiosInstance.patch(
-      `/api/users/resetpassword/${id}`,
-      value
-    );
-    return response.data;
-  } catch (error) {
-    console.log(error);
-  }
+  const response = await axiosInstance.patch(
+    `/api/users/resetpassword/${id}`,
+    value,
+  );
+  return response.data;
 };

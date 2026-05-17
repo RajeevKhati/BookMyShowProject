@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Result, Button, Spin, message } from "antd";
+import { Result, Button, Spin } from "antd";
+import { toast } from "../../feedback/toast";
 import { axiosInstance } from "../../api";
 
 const SuccessPage = () => {
@@ -15,7 +16,7 @@ const SuccessPage = () => {
       const sessionId = query.get("session_id");
 
       if (!sessionId) {
-        message.error("Missing session ID");
+        toast.error("Missing session ID");
         return navigate("/error");
       }
 
