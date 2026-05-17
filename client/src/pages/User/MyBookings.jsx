@@ -7,7 +7,7 @@ import {
   Typography,
 } from "antd";
 import { Link } from "react-router-dom";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getMyBookings } from "../../api/booking";
 import { PageHeading, SurfaceCard } from "../../components/layout";
@@ -90,10 +90,10 @@ function MyBookings() {
           const movieId = movie?._id ? String(movie._id) : null;
           const showDate = record.show?.date;
 
-          const showDateMoment = moment(showDate);
-          const dateQuery = showDateMoment.isValid()
-            ? showDateMoment.format("YYYY-MM-DD")
-            : moment().format("YYYY-MM-DD");
+          const showDateParsed = dayjs(showDate);
+          const dateQuery = showDateParsed.isValid()
+            ? showDateParsed.format("YYYY-MM-DD")
+            : dayjs().format("YYYY-MM-DD");
 
           const content = movieId ? (
             <Link
@@ -154,7 +154,7 @@ function MyBookings() {
           if (!record.show || !d) return "—";
           return (
             <span>
-              {moment(d).format("ddd, MMM D, YYYY")}
+              {dayjs(d).format("ddd, MMM D, YYYY")}
               <br />
               <Text type="secondary">{time}</Text>
             </span>
@@ -198,7 +198,7 @@ function MyBookings() {
         width: 124,
         render: (_, record) =>
           record.createdAt
-            ? moment(record.createdAt).format("MMM D, YYYY")
+            ? dayjs(record.createdAt).format("MMM D, YYYY")
             : "—",
       },
       {

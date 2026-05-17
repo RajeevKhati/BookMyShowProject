@@ -3,7 +3,7 @@ import { getShowById } from "../../api/show";
 import { useNavigate, useParams } from "react-router-dom";
 import { Spin } from "antd";
 import { toast } from "../../feedback/toast";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 import { axiosInstance } from "../../api";
 import { PageHeading, SurfaceCard } from "../../components/layout";
 import { UiButton } from "../../components/ui";
@@ -188,8 +188,8 @@ const BookShow = () => {
                 Date &amp; time
               </dt>
               <dd className="mt-1 mb-0 font-semibold text-white">
-                {moment(show.date).format("MMM Do YYYY")} ·{" "}
-                {moment(show.time, "HH:mm").format("hh:mm A")}
+                {dayjs(show.date).format("MMM Do YYYY")} ·{" "}
+                {dayjs(show.time, "HH:mm").format("hh:mm A")}
               </dd>
             </div>
             <div>

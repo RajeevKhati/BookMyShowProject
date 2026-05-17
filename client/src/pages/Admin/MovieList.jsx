@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Empty, Spin, Table, Tooltip } from "antd";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 import { getAllMovies } from "../../api/movie";
 import { toast } from "../../feedback/toast";
 import { theme as cinematicTheme } from "../../styles/theme";
@@ -145,7 +145,7 @@ function MovieList() {
         width: 120,
         render: (_, row) =>
           row.releaseDate
-            ? moment(row.releaseDate).format("MMM D, YYYY")
+            ? dayjs(row.releaseDate).format("MMM D, YYYY")
             : "—",
       },
       {

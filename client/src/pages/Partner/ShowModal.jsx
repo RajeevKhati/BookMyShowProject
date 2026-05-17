@@ -21,9 +21,6 @@ import {
   TimePicker,
   Typography,
 } from "antd";
-import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
-import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getAllMovies } from "../../api/movie";
 import {
@@ -35,8 +32,7 @@ import {
 import { toast } from "../../feedback/toast";
 import { UiButton } from "../../components/ui";
 import { theme as cinematicTheme } from "../../styles/theme";
-
-dayjs.extend(customParseFormat);
+import dayjs from "../../utils/dayjs";
 
 const { Text, Title } = Typography;
 
@@ -202,7 +198,7 @@ function ShowModal({
         key: "date",
         width: 132,
         render: (text) =>
-          text ? moment(text).format("MMM D, YYYY") : "—",
+          text ? dayjs(text).format("MMM D, YYYY") : "—",
       },
       {
         title: "Time",
@@ -210,7 +206,7 @@ function ShowModal({
         key: "time",
         width: 100,
         render: (text) =>
-          text ? moment(text, "HH:mm").format("hh:mm A") : "—",
+          text ? dayjs(text, "HH:mm").format("hh:mm A") : "—",
       },
       {
         title: "Movie",

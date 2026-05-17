@@ -1,8 +1,8 @@
-import { Col, Modal, Row, Form, Input, Select } from "antd";
+import { Col, DatePicker, Modal, Row, Form, Input, Select } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { useMemo } from "react";
-import moment from "moment";
 import { addMovie, updateMovie } from "../../api/movie";
+import dayjs from "../../utils/dayjs";
 import { toast } from "../../feedback/toast";
 import { UiButton } from "../../components/ui";
 import { MOVIE_GENRE_OPTIONS, MOVIE_LANGUAGE_OPTIONS } from "./constants";
@@ -20,7 +20,7 @@ const MovieForm = ({
     return {
       ...selectedMovie,
       releaseDate: selectedMovie.releaseDate
-        ? moment(selectedMovie.releaseDate).format("YYYY-MM-DD")
+        ? dayjs(selectedMovie.releaseDate)
         : undefined,
     };
   }, [formType, selectedMovie]);
@@ -29,11 +29,18 @@ const MovieForm = ({
 
   const onFinish = async (values) => {
     try {
+      const releaseDate =
+        values.releaseDate?.format?.("YYYY-MM-DD") ?? values.releaseDate;
+      const payload = { ...values, releaseDate };
+
       let response = null;
       if (formType === "add") {
-        response = await addMovie(values);
+        response = await addMovie(payload);
       } else {
-        response = await updateMovie({ ...values, movieId: selectedMovie._id });
+        response = await updateMovie({
+          ...payload,
+          movieId: selectedMovie._id,
+        });
       }
       if (response.success) {
         getData();
@@ -125,7 +132,11 @@ const MovieForm = ({
               name="releaseDate"
               rules={[{ required: true, message: "Release date is required" }]}
             >
-              <Input size="large" type="date" />
+              <DatePicker
+                size="large"
+                className="w-full"
+                format="YYYY-MM-DD"
+              />
             </Form.Item>
           </Col>
           <Col xs={24} sm={8}>

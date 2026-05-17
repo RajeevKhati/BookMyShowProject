@@ -1,26 +1,46 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getMovieById } from "../../api/movie";
-import { Divider, Input } from "antd";
+import { DatePicker, Divider } from "antd";
 import { toast } from "../../feedback/toast";
 import { CalendarOutlined } from "@ant-design/icons";
-import moment from "moment";
 import { getAllTheatresByMovie } from "../../api/show";
 import { PageHeading, SurfaceCard } from "../../components/layout";
 import { UiButton } from "../../components/ui";
 import { theme as cinematicTheme } from "../../styles/theme";
+import dayjs from "../../utils/dayjs";
+
+const DATE_FMT = "YYYY-MM-DD";
+
+function parseRouteDate(raw) {
+  const d = raw ? dayjs(raw, DATE_FMT, true) : null;
+  return d?.isValid() ? raw : null;
+}
 
 const SingleMovie = () => {
   const params = useParams();
-  const [movie, setMovie] = useState();
-  const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
-  const [theatres, setTheatres] = useState([]);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const handleDate = (e) => {
-    const next = moment(e.target.value).format("YYYY-MM-DD");
+  const initialDate = useMemo(() => {
+    const fromQuery = parseRouteDate(searchParams.get("date"));
+    return fromQuery ?? dayjs().format(DATE_FMT);
+  }, [searchParams]);
+
+  const [movie, setMovie] = useState();
+  const [date, setDate] = useState(initialDate);
+  const [theatres, setTheatres] = useState([]);
+
+  useEffect(() => {
+    setDate(initialDate);
+  }, [initialDate]);
+
+  const handleDateChange = (value) => {
+    const next = value?.isValid()
+      ? value.format(DATE_FMT)
+      : dayjs().format(DATE_FMT);
     setDate(next);
-    navigate(`/movie/${params.id}?date=${e.target.value}`);
+    navigate(`/movie/${params.id}?date=${next}`, { replace: true });
   };
 
   const getData = async () => {
@@ -72,6 +92,8 @@ const SingleMovie = () => {
     </div>
   );
 
+  const parsedShowDate = dayjs(date, DATE_FMT, true);
+
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -103,7 +125,9 @@ const SingleMovie = () => {
                   <div>
                     {metaRow(
                       "Release date",
-                      moment(movie.releaseDate).format("MMM Do YYYY"),
+                      movie.releaseDate
+                        ? dayjs(movie.releaseDate).format("MMM Do YYYY")
+                        : "—",
                     )}
                   </div>
                   <div>{metaRow("Duration", `${movie.duration} min`)}</div>
@@ -116,13 +140,16 @@ const SingleMovie = () => {
                     <CalendarOutlined aria-hidden />
                     Show date
                   </span>
-                  <Input
-                    type="date"
+                  <DatePicker
                     size="large"
-                    min={moment().format("YYYY-MM-DD")}
-                    value={date}
-                    onChange={handleDate}
-                    className="max-w-[260px] !rounded-xl"
+                    value={parsedShowDate.isValid() ? parsedShowDate : dayjs()}
+                    onChange={handleDateChange}
+                    disabledDate={(current) =>
+                      current && current < dayjs().startOf("day")
+                    }
+                    format={DATE_FMT}
+                    className="max-w-[260px]"
+                    allowClear={false}
                   />
                 </div>
               </div>
@@ -166,8 +193,8 @@ const SingleMovie = () => {
                           .slice()
                           .sort(
                             (a, b) =>
-                              moment(a.time, "HH:mm").valueOf() -
-                              moment(b.time, "HH:mm").valueOf(),
+                              dayjs(a.time, "HH:mm").valueOf() -
+                              dayjs(b.time, "HH:mm").valueOf(),
                           )
                           .map((singleShow) => (
                             <li key={singleShow._id}>
@@ -182,7 +209,7 @@ const SingleMovie = () => {
                                   navigate(`/book-show/${singleShow._id}`)
                                 }
                               >
-                                {moment(singleShow.time, "HH:mm").format(
+                                {dayjs(singleShow.time, "HH:mm").format(
                                   "hh:mm A",
                                 )}
                               </button>

@@ -4,7 +4,7 @@ import { toast } from "../../feedback/toast";
 import { Empty, Input, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
 import { SearchOutlined } from "@ant-design/icons";
-import moment from "moment";
+import dayjs from "../../utils/dayjs";
 import { PageHeading, SurfaceCard } from "../../components/layout";
 
 const Home = () => {
@@ -39,7 +39,7 @@ const Home = () => {
   }, [movies, searchText]);
 
   const openMovie = (movieId) => {
-    navigate(`/movie/${movieId}?date=${moment().format("YYYY-MM-DD")}`);
+    navigate(`/movie/${movieId}?date=${dayjs().format("YYYY-MM-DD")}`);
   };
 
   return (
