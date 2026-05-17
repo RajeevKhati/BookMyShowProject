@@ -117,12 +117,12 @@ function AppShell({ user, onPrimaryNav, children }) {
   return (
     <Layout className="min-h-screen bg-[#0F0F0F]">
       <Header
-        className="flex !h-16 !leading-none items-center gap-4 !bg-transparent !px-4 sm:!px-6"
+        className="flex !h-16 !leading-none items-center gap-4 !px-4 sm:!px-6"
         style={{
           position: "sticky",
           top: 0,
-          zIndex: 50,
-          background: cinematicTheme.colors.card,
+          zIndex: 200,
+          backgroundColor: cinematicTheme.colors.card,
           borderBottom: `1px solid ${cinematicTheme.colors.elevated}`,
         }}
       >

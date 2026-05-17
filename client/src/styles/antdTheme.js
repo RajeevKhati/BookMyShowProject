@@ -35,5 +35,8 @@ export const antdAppThemeConfig = {
       labelColor: cinematicTheme.colors.textSecondary,
       verticalLabelPadding: "0 0 8px",
     },
+    Layout: {
+      headerBg: cinematicTheme.colors.card,
+    },
   },
 };
