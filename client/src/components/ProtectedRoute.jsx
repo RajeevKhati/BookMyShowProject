@@ -1,98 +1,69 @@
-import React, { useEffect, useMemo } from "react";
+import PropTypes from "prop-types";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  HomeOutlined,
-  LogoutOutlined,
-  ProfileOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { hideLoading, showLoading } from "../redux/loaderSlice";
+import { useNavigate } from "react-router-dom";
+import { message } from "antd";
 import { GetCurrentUser } from "../api/user";
+import { hideLoading, showLoading } from "../redux/loaderSlice";
 import { setUser } from "../redux/userSlice";
-import { message, Layout, Menu } from "antd";
+import AppShell from "./layout/AppShell";
+import { getDashboardPath } from "../utils/dashboardPath";
 
-/** Where "My Profile" and unauthorized redirects go — must match `/admin`, `/partner`, `/profile` rules */
-export function getDashboardPath(role) {
-  if (role === "admin") return "/admin";
-  if (role === "partner") return "/partner";
-  return "/profile";
+/** Re-export for callers that derive navigation from role */
+export { getDashboardPath } from "../utils/dashboardPath";
+
+/** Open route if `allowedRoles` empty; otherwise require one of those roles */
+function allowsRole(user, allowedRoles) {
+  if (!user) return false;
+  if (!allowedRoles?.length) return true;
+  return allowedRoles.includes(user.role);
 }
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
+function ProtectedRoute({ children, allowedRoles }) {
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { Header } = Layout;
 
-  const roleAllowed =
-    user &&
-    (!allowedRoles?.length || allowedRoles.includes(user.role));
+  const [sessionChecked, setSessionChecked] = useState(false);
 
-  const navItems = useMemo(
-    () => [
-      {
-        key: "home",
-        label: "Home",
-        icon: <HomeOutlined />,
-      },
-      {
-        key: "user",
-        label: `${user?.name ?? ""}`,
-        icon: <UserOutlined />,
-        children: [
-          {
-            key: "profile",
-            label: "My Profile",
-            icon: <ProfileOutlined />,
-          },
-          {
-            key: "logout",
-            label: (
-              <Link
-                to="/login"
-                onClick={() => {
-                  localStorage.removeItem("token");
-                }}
-              >
-                Log Out
-              </Link>
-            ),
-            icon: <LogoutOutlined />,
-          },
-        ],
-      },
-    ],
-    [user?.name],
-  );
+  const canRender = allowsRole(user, allowedRoles);
 
-  const onMenuClick = ({ key }) => {
-    if (key === "profile" && user) {
-      navigate(getDashboardPath(user.role));
+  const bootstrapSession = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      setSessionChecked(true);
+      return;
     }
-  };
-
-  const getValidUser = async () => {
     try {
       dispatch(showLoading());
-      const response = await GetCurrentUser();
-      dispatch(setUser(response.data));
+      const payload = await GetCurrentUser();
+
+      const nextUser =
+        payload?.success && payload?.data != null ? payload.data : null;
+
+      if (nextUser) {
+        dispatch(setUser(nextUser));
+      } else {
+        throw new Error(
+          payload?.message || "Unable to restore your session. Please sign in again.",
+        );
+      }
     } catch (error) {
       dispatch(setUser(null));
       navigate("/login");
-      message.error(error.message);
+      message.error(
+        error instanceof Error ? error.message : "Please sign in again.",
+      );
     } finally {
       dispatch(hideLoading());
+      setSessionChecked(true);
     }
-  };
+  }, [dispatch, navigate]);
 
   useEffect(() => {
-    if (localStorage.getItem("token")) {
-      getValidUser();
-    } else {
-      navigate("/login");
-    }
-  }, []);
+    bootstrapSession();
+  }, [bootstrapSession]);
 
   useEffect(() => {
     if (!user || !allowedRoles?.length) return;
@@ -101,39 +72,45 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     navigate(getDashboardPath(user.role), { replace: true });
   }, [user, allowedRoles, navigate]);
 
-  return (
-    user &&
-    roleAllowed && (
-      <>
-        <Layout>
-          <Header
-            className="d-flex justify-content-between"
-            style={{
-              position: "sticky",
-              top: 0,
-              zIndex: 1,
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <h3 className="demo-logo text-white m-0" style={{ color: "white" }}>
-              CineVault
-            </h3>
-            <Menu
-              theme="dark"
-              mode="horizontal"
-              items={navItems}
-              onClick={onMenuClick}
-            />
-          </Header>
-          <div style={{ padding: 24, minHeight: 380, background: "#fff" }}>
-            {children}
-          </div>
-        </Layout>
-      </>
-    )
+  const onPrimaryNav = useCallback(
+    (key) => {
+      if (!user) return;
+      if (key === "home") {
+        navigate("/");
+        return;
+      }
+      if (key === "profile") {
+        navigate(getDashboardPath(user.role));
+        return;
+      }
+      if (key === "logout") {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
+    },
+    [navigate, user],
   );
+
+  const renderChildren = sessionChecked && Boolean(user) && canRender;
+
+  if (!renderChildren) {
+    return null;
+  }
+
+  return (
+    <AppShell user={user} onPrimaryNav={onPrimaryNav}>
+      {children}
+    </AppShell>
+  );
+}
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string),
+};
+
+ProtectedRoute.defaultProps = {
+  allowedRoles: undefined,
 };
 
 export default ProtectedRoute;
