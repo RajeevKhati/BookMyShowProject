@@ -8,6 +8,9 @@ import { axiosInstance } from "../../api";
 import { PageHeading, SurfaceCard } from "../../components/layout";
 import { UiButton } from "../../components/ui";
 import { theme as cinematicTheme } from "../../styles/theme";
+import { computeSeatGridLayout } from "../../utils/seatGridLayout";
+
+const EMPTY_BOOKED_SEATS = [];
 
 const BookShow = () => {
   const [show, setShow] = useState();
@@ -26,109 +29,6 @@ const BookShow = () => {
     } catch (err) {
       toast.error(err.message);
     }
-  };
-
-  const getSeats = () => {
-    const columns = 12;
-    const totalSeats = 120;
-    const rows = totalSeats / columns;
-
-    return (
-      <div className="flex flex-col items-center px-2">
-        <div className="mx-auto mb-8 w-full max-w-[600px]">
-          <p
-            className="mb-3 text-center text-sm"
-            style={{ color: cinematicTheme.colors.textSecondary }}
-          >
-            Screen this side — you&apos;ll be facing this direction
-          </p>
-          <div
-            className="mx-auto h-2 w-3/4 rounded-full"
-            style={{ backgroundColor: cinematicTheme.colors.elevated }}
-          />
-        </div>
-
-        <ul className="mx-auto flex max-w-[640px] flex-wrap justify-center gap-2">
-          {Array.from(Array(rows).keys()).map((row) =>
-            Array.from(Array(columns).keys()).map((column) => {
-              const seatNumber = row * columns + column + 1;
-              if (seatNumber > totalSeats) return null;
-
-              const booked = show.bookedSeats.includes(seatNumber);
-              const selected = selectedSeats.includes(seatNumber);
-
-              let bg = cinematicTheme.colors.backgroundSecondary;
-              let border = "#444444";
-              let textCls = "text-white";
-
-              if (booked) {
-                bg = "#2a2a2a";
-                border = "#3d3d3d";
-                textCls = "text-[#808080]";
-              } else if (selected) {
-                bg = cinematicTheme.colors.success;
-                border = cinematicTheme.colors.success;
-                textCls = "text-[#0f0f0f]";
-              }
-
-              return (
-                <li key={seatNumber}>
-                  <button
-                    type="button"
-                    disabled={booked}
-                    className={`flex h-9 w-10 items-center justify-center rounded-lg border text-sm font-semibold transition-colors ${textCls} ${
-                      booked ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:brightness-110"
-                    }`}
-                    style={{ backgroundColor: bg, borderColor: border }}
-                    onClick={() => {
-                      if (booked) return;
-                      if (selected) {
-                        setSelectedSeats(
-                          selectedSeats.filter((s) => s !== seatNumber),
-                        );
-                      } else {
-                        setSelectedSeats([...selectedSeats, seatNumber]);
-                      }
-                    }}
-                  >
-                    {seatNumber}
-                  </button>
-                </li>
-              );
-            }),
-          )}
-        </ul>
-
-        <div
-          className="mx-auto mt-8 flex w-full max-w-[600px] flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between"
-          style={{
-            borderColor: cinematicTheme.colors.elevated,
-            backgroundColor: cinematicTheme.colors.backgroundSecondary,
-          }}
-        >
-          <div className="min-w-0 flex-1">
-            <p
-              className="m-0 text-xs font-semibold uppercase tracking-wider text-[#808080]"
-            >
-              Selected seats
-            </p>
-            <p className="mt-1 mb-0 truncate text-base font-semibold text-white">
-              {selectedSeats.length ? selectedSeats.join(", ") : "None yet"}
-            </p>
-          </div>
-          <div className="shrink-0 text-left sm:text-right">
-            <p
-              className="m-0 text-xs font-semibold uppercase tracking-wider text-[#808080]"
-            >
-              Total
-            </p>
-            <p className="mt-1 mb-0 text-xl font-bold tabular-nums text-white">
-              ₹{selectedSeats.length * show.ticketPrice}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   const handleCheckout = async () => {
@@ -159,6 +59,136 @@ const BookShow = () => {
     );
   }
 
+  const seatCapacity = Math.max(0, Number(show.totalSeats) || 0);
+  const bookedSeatsArr = Array.isArray(show.bookedSeats)
+    ? show.bookedSeats
+    : EMPTY_BOOKED_SEATS;
+
+  const renderSeatGrid = () => {
+    if (seatCapacity === 0) {
+      return (
+        <p
+          className="px-2 text-center text-sm"
+          style={{ color: cinematicTheme.colors.textSecondary }}
+        >
+          Seat capacity for this show is not configured.
+        </p>
+      );
+    }
+
+    const { columns, rows } = computeSeatGridLayout(seatCapacity);
+    const bookedSeatSet = new Set(
+      bookedSeatsArr.map((s) => Number(s)),
+    );
+
+    return (
+      <div className="flex flex-col items-center px-2">
+        <div className="mx-auto mb-8 w-full max-w-[600px]">
+          <p
+            className="mb-3 text-center text-sm"
+            style={{ color: cinematicTheme.colors.textSecondary }}
+          >
+            Screen this side — you'll be facing this direction
+          </p>
+          <div
+            className="mx-auto h-2 w-3/4 rounded-full"
+            style={{ backgroundColor: cinematicTheme.colors.elevated }}
+          />
+        </div>
+
+        <div className="mx-auto flex w-full max-w-[960px] flex-col items-center gap-2">
+          {Array.from({ length: rows }, (_, rowIdx) => {
+            const seatsThisRow = Math.min(
+              columns,
+              seatCapacity - rowIdx * columns,
+            );
+            if (seatsThisRow <= 0) return null;
+
+            return (
+              <div
+                key={rowIdx}
+                className="flex max-w-full justify-center gap-2"
+              >
+                {Array.from({ length: seatsThisRow }, (_, i) => {
+                  const seatNumber = rowIdx * columns + i + 1;
+
+                  const booked = bookedSeatSet.has(seatNumber);
+                  const selected = selectedSeats.includes(seatNumber);
+
+                  let bg = cinematicTheme.colors.backgroundSecondary;
+                  let border = "#444444";
+                  let textCls = "text-white";
+
+                  if (booked) {
+                    bg = "#2a2a2a";
+                    border = "#3d3d3d";
+                    textCls = "text-[#808080]";
+                  } else if (selected) {
+                    bg = cinematicTheme.colors.success;
+                    border = cinematicTheme.colors.success;
+                    textCls = "text-[#0f0f0f]";
+                  }
+
+                  return (
+                    <div key={seatNumber}>
+                      <button
+                        type="button"
+                        disabled={booked}
+                        className={`flex h-9 w-10 items-center justify-center rounded-lg border text-sm font-semibold transition-colors ${textCls} ${
+                          booked
+                            ? "cursor-not-allowed opacity-70"
+                            : "cursor-pointer hover:brightness-110"
+                        }`}
+                        style={{ backgroundColor: bg, borderColor: border }}
+                        onClick={() => {
+                          if (booked) return;
+                          if (selected) {
+                            setSelectedSeats(
+                              selectedSeats.filter((s) => s !== seatNumber),
+                            );
+                          } else {
+                            setSelectedSeats([...selectedSeats, seatNumber]);
+                          }
+                        }}
+                      >
+                        {seatNumber}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          className="mx-auto mt-8 flex w-full max-w-[600px] flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between"
+          style={{
+            borderColor: cinematicTheme.colors.elevated,
+            backgroundColor: cinematicTheme.colors.backgroundSecondary,
+          }}
+        >
+          <div className="min-w-0 flex-1">
+            <p className="m-0 text-xs font-semibold uppercase tracking-wider text-[#808080]">
+              Selected seats
+            </p>
+            <p className="mt-1 mb-0 truncate text-base font-semibold text-white">
+              {selectedSeats.length ? selectedSeats.join(", ") : "None yet"}
+            </p>
+          </div>
+          <div className="shrink-0 text-left sm:text-right">
+            <p className="m-0 text-xs font-semibold uppercase tracking-wider text-[#808080]">
+              Total
+            </p>
+            <p className="mt-1 mb-0 text-xl font-bold tabular-nums text-white">
+              ₹{selectedSeats.length * show.ticketPrice}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-12">
       <UiButton variant="secondary" size="middle" onClick={() => navigate(-1)}>
@@ -181,7 +211,9 @@ const BookShow = () => {
               <dt className="text-xs font-semibold uppercase tracking-wider text-[#808080]">
                 Show
               </dt>
-              <dd className="mt-1 mb-0 font-semibold text-white">{show.name}</dd>
+              <dd className="mt-1 mb-0 font-semibold text-white">
+                {show.name}
+              </dd>
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-[#808080]">
@@ -205,14 +237,14 @@ const BookShow = () => {
                 Seats
               </dt>
               <dd className="mt-1 mb-0 font-semibold text-white">
-                {show.totalSeats - show.bookedSeats.length} available ·{" "}
-                {show.bookedSeats.length} booked
+                {seatCapacity - bookedSeatsArr.length} available ·{" "}
+                {bookedSeatsArr.length} booked
               </dd>
             </div>
           </dl>
         </div>
 
-        <div className="px-4 py-8 sm:px-8">{getSeats()}</div>
+        <div className="px-4 py-8 sm:px-8">{renderSeatGrid()}</div>
 
         {selectedSeats.length > 0 ? (
           <div
