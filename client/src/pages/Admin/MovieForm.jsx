@@ -1,8 +1,11 @@
-import { Col, Modal, Row, Form, Input, Select, Button } from "antd";
+import { Col, Modal, Row, Form, Input, Select } from "antd";
 import TextArea from "antd/es/input/TextArea";
+import { useMemo } from "react";
+import moment from "moment";
 import { addMovie, updateMovie } from "../../api/movie";
 import { toast } from "../../feedback/toast";
-import moment from "moment";
+import { UiButton } from "../../components/ui";
+import { MOVIE_GENRE_OPTIONS, MOVIE_LANGUAGE_OPTIONS } from "./constants";
 
 const MovieForm = ({
   isModalOpen,
@@ -12,11 +15,17 @@ const MovieForm = ({
   formType,
   getData,
 }) => {
-  if (selectedMovie) {
-    selectedMovie.releaseDate = moment(selectedMovie.releaseDate).format(
-      "YYYY-MM-DD"
-    );
-  }
+  const formInitialValues = useMemo(() => {
+    if (formType !== "edit" || !selectedMovie) return undefined;
+    return {
+      ...selectedMovie,
+      releaseDate: selectedMovie.releaseDate
+        ? moment(selectedMovie.releaseDate).format("YYYY-MM-DD")
+        : undefined,
+    };
+  }, [formType, selectedMovie]);
+
+  const formKey = `${formType}-${selectedMovie?._id ?? "new"}`;
 
   const onFinish = async (values) => {
     try {
@@ -32,8 +41,8 @@ const MovieForm = ({
         setIsModalOpen(false);
       }
       setSelectedMovie(null);
-    } catch (err) {
-      // Errors surfaced by axios interceptors.
+    } catch {
+      /* axios interceptors */
     }
   };
 
@@ -45,134 +54,117 @@ const MovieForm = ({
   return (
     <Modal
       centered
-      title={formType === "add" ? "Add Movie" : "Edit Movie"}
+      destroyOnClose
+      title={formType === "add" ? "Add movie" : "Edit movie"}
       open={isModalOpen}
       onCancel={handleCancel}
-      width={800}
+      width={840}
       footer={null}
+      classNames={{ body: "!pt-2" }}
     >
-      <Form layout="vertical" initialValues={selectedMovie} onFinish={onFinish}>
-        <Row gutter={{ xs: 6, sm: 10, md: 12, lg: 16 }}>
+      <Form
+        key={formKey}
+        layout="vertical"
+        initialValues={formInitialValues}
+        onFinish={onFinish}
+        requiredMark={false}
+      >
+        <Row gutter={{ xs: 8, sm: 12 }}>
           <Col span={24}>
             <Form.Item
-              label="Movie Name"
+              label="Movie name"
               name="movieName"
-              rules={[{ required: true, message: "Movie name is required!" }]}
+              rules={[{ required: true, message: "Movie name is required" }]}
             >
-              <Input placeholder="Enter the movie name" />
+              <Input size="large" placeholder="Enter the movie title" />
             </Form.Item>
           </Col>
           <Col span={24}>
             <Form.Item
               label="Description"
               name="description"
-              rules={[{ required: true, message: "Description is required!" }]}
+              rules={[{ required: true, message: "Description is required" }]}
             >
-              <TextArea rows="4" placeholder="Enter the description" />
+              <TextArea
+                rows={4}
+                size="large"
+                placeholder="Short synopsis shown to viewers"
+              />
             </Form.Item>
           </Col>
-          <Col span={24}>
-            <Row gutter={{ xs: 6, sm: 10, md: 12, lg: 16 }}>
-              <Col span={8}>
-                <Form.Item
-                  label="Movie Duration (in min)"
-                  name="duration"
-                  rules={[
-                    { required: true, message: "Movie duration is required!" },
-                  ]}
-                >
-                  <Input type="number" placeholder="Enter the movie duration" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item
-                  label="Select Movie Language"
-                  name="language"
-                  rules={[
-                    { required: true, message: "Movie language is required!" },
-                  ]}
-                >
-                  <Select
-                    placeholder="Select Language"
-                    options={[
-                      { value: "English", label: "English" },
-                      { value: "Hindi", label: "Hindi" },
-                      { value: "Punjabi", label: "Punjabi" },
-                      { value: "Telugu", label: "Telugu" },
-                      { value: "Bengali", label: "Bengali" },
-                      { value: "German", label: "German" },
-                    ]}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item
-                  label="Release Date"
-                  name="releaseDate"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Movie Release Date is required!",
-                    },
-                  ]}
-                >
-                  <Input type="date" />
-                </Form.Item>
-              </Col>
-            </Row>
+          <Col xs={24} sm={8}>
+            <Form.Item
+              label="Duration (minutes)"
+              name="duration"
+              rules={[{ required: true, message: "Duration is required" }]}
+            >
+              <Input
+                size="large"
+                type="number"
+                min={1}
+                placeholder="Minutes"
+              />
+            </Form.Item>
           </Col>
-          <Col span={24}>
-            <Row gutter={{ xs: 6, sm: 10, md: 12, lg: 16 }}>
-              <Col span={8}>
-                <Form.Item
-                  label="Select Movie Genre"
-                  name="genre"
-                  rules={[
-                    { required: true, message: "Movie genre is required!" },
-                  ]}
-                >
-                  <Select
-                    placeholder="Select Movie"
-                    options={[
-                      { value: "Action", label: "Action" },
-                      { value: "Comedy", label: "Comedy" },
-                      { value: "Horror", label: "Horror" },
-                      { value: "Love", label: "Love" },
-                      { value: "Patriot", label: "Patriot" },
-                      { value: "Bhakti", label: "Bhakti" },
-                      { value: "Thriller", label: "Thriller" },
-                      { value: "Mystery", label: "Mystery" },
-                    ]}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={16}>
-                <Form.Item
-                  label="Poster URL"
-                  name="poster"
-                  rules={[
-                    { required: true, message: "Movie Poster is required!" },
-                  ]}
-                >
-                  <Input placeholder="Enter the poster URL" />
-                </Form.Item>
-              </Col>
-            </Row>
+          <Col xs={24} sm={8}>
+            <Form.Item
+              label="Language"
+              name="language"
+              rules={[{ required: true, message: "Language is required" }]}
+            >
+              <Select
+                size="large"
+                placeholder="Select language"
+                options={MOVIE_LANGUAGE_OPTIONS}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Form.Item
+              label="Release date"
+              name="releaseDate"
+              rules={[{ required: true, message: "Release date is required" }]}
+            >
+              <Input size="large" type="date" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Form.Item
+              label="Genre"
+              name="genre"
+              rules={[{ required: true, message: "Genre is required" }]}
+            >
+              <Select
+                size="large"
+                placeholder="Select genre"
+                options={MOVIE_GENRE_OPTIONS}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={16}>
+            <Form.Item
+              label="Poster URL"
+              name="poster"
+              rules={[{ required: true, message: "Poster URL is required" }]}
+            >
+              <Input size="large" placeholder="HTTPS link to poster image" />
+            </Form.Item>
           </Col>
         </Row>
-        <Form.Item>
-          <Button
-            block
-            type="primary"
-            htmlType="submit"
-            style={{ fontSize: "1rem", fontWeight: "600" }}
-          >
-            Submit the Data
-          </Button>
-          <Button className="mt-3" block onClick={handleCancel}>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <UiButton size="large" className="order-2 sm:order-1 sm:min-w-[120px]" onClick={handleCancel}>
             Cancel
-          </Button>
-        </Form.Item>
+          </UiButton>
+          <UiButton
+            variant="primary"
+            size="large"
+            htmlType="submit"
+            className="order-1 sm:order-2 sm:min-w-[160px]"
+          >
+            Save movie
+          </UiButton>
+        </div>
       </Form>
     </Modal>
   );
