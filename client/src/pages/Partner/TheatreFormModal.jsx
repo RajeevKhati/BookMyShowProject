@@ -1,26 +1,38 @@
-import { Col, Modal, Row, Form, Input, Select, Button } from "antd";
+import { Col, Modal, Row, Form, Input } from "antd";
 import TextArea from "antd/es/input/TextArea";
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { addTheatre, updateTheatre } from "../../api/theatre";
 import { toast } from "../../feedback/toast";
+import { UiButton } from "../../components/ui";
 
-const TheatreFormModal = ({
+function TheatreFormModal({
   isModalOpen,
   setIsModalOpen,
   selectedTheatre,
   setSelectedTheatre,
   formType,
   getData,
-}) => {
+}) {
   const { user } = useSelector((state) => state.user);
+
+  const formKey = `${formType}-${selectedTheatre?._id ?? "new"}`;
+
+  const initialValues = useMemo(() => {
+    if (formType !== "edit" || !selectedTheatre) return undefined;
+    return selectedTheatre;
+  }, [formType, selectedTheatre]);
+
   const onFinish = async (values) => {
     try {
       let response = null;
       if (formType === "add") {
         response = await addTheatre({ ...values, owner: user._id });
       } else {
-        values.theatreId = selectedTheatre._id;
-        response = await updateTheatre(values);
+        response = await updateTheatre({
+          ...values,
+          theatreId: selectedTheatre._id,
+        });
       }
       if (response.success) {
         getData();
@@ -28,10 +40,11 @@ const TheatreFormModal = ({
         setIsModalOpen(false);
       }
       setSelectedTheatre(null);
-    } catch (err) {
-      // Errors surfaced by axios interceptors.
+    } catch {
+      /* axios interceptors */
     }
   };
+
   const handleCancel = () => {
     setIsModalOpen(false);
     setSelectedTheatre(null);
@@ -40,89 +53,84 @@ const TheatreFormModal = ({
   return (
     <Modal
       centered
-      title={formType === "add" ? "Add Theatre" : "Edit Theatre"}
+      destroyOnClose
+      title={formType === "add" ? "Add theatre" : "Edit theatre"}
       open={isModalOpen}
       onCancel={handleCancel}
-      width={800}
+      width={720}
       footer={null}
+      classNames={{ body: "!pt-2" }}
     >
       <Form
+        key={formKey}
         layout="vertical"
-        initialValues={selectedTheatre}
+        initialValues={initialValues}
         onFinish={onFinish}
+        requiredMark={false}
       >
-        <Row gutter={{ xs: 6, sm: 10, md: 12, lg: 16 }}>
+        <Row gutter={{ xs: 8, sm: 12 }}>
           <Col span={24}>
             <Form.Item
-              label="Theatre Name"
+              label="Theatre name"
               name="name"
-              rules={[{ required: true, message: "Theatre name is required!" }]}
+              rules={[{ required: true, message: "Theatre name is required" }]}
             >
-              <Input placeholder="Enter the Theatre name" />
+              <Input size="large" placeholder="Venue display name" />
             </Form.Item>
           </Col>
           <Col span={24}>
             <Form.Item
-              label="Theatre Address"
+              label="Address"
               name="address"
-              rules={[{ required: true, message: "Theatre name is required!" }]}
+              rules={[{ required: true, message: "Address is required" }]}
             >
               <TextArea
-                id="address"
-                rows="3"
-                placeholder="Enter the description"
+                rows={3}
+                size="large"
+                placeholder="Street, city, landmark…"
               />
             </Form.Item>
           </Col>
-          <Col span={24}>
-            <Row gutter={{ xs: 6, sm: 10, md: 12, lg: 16 }}>
-              <Col span={12}>
-                <Form.Item
-                  label="Email"
-                  name="email"
-                  rules={[{ required: true, message: "Email is required!" }]}
-                >
-                  <Input
-                    type="email"
-                    id="email"
-                    placeholder="Enter the email"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Phone number"
-                  name="phone"
-                  rules={[
-                    { required: true, message: "Phone number is required!" },
-                  ]}
-                >
-                  <Input
-                    type="number"
-                    id="number"
-                    placeholder="Enter the contact number"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: "Email is required" }]}
+            >
+              <Input size="large" type="email" placeholder="contact@venue.com" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item
+              label="Phone"
+              name="phone"
+              rules={[{ required: true, message: "Phone is required" }]}
+            >
+              <Input size="large" placeholder="Customer-facing phone" />
+            </Form.Item>
           </Col>
         </Row>
-        <Form.Item>
-          <Button
-            block
-            type="primary"
-            htmlType="submit"
-            style={{ fontSize: "1rem", fontWeight: "600" }}
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <UiButton
+            size="large"
+            className="order-2 sm:order-1 sm:min-w-[120px]"
+            onClick={handleCancel}
           >
-            Submit the Data
-          </Button>
-          <Button className="mt-3" block onClick={handleCancel}>
             Cancel
-          </Button>
-        </Form.Item>
+          </UiButton>
+          <UiButton
+            variant="primary"
+            size="large"
+            htmlType="submit"
+            className="order-1 sm:order-2 sm:min-w-[140px]"
+          >
+            Save theatre
+          </UiButton>
+        </div>
       </Form>
     </Modal>
   );
-};
+}
 
 export default TheatreFormModal;

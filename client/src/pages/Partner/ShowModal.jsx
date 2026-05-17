@@ -1,19 +1,30 @@
 import {
+  ArrowLeftOutlined,
+  CalendarOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import {
   Col,
-  Modal,
-  Row,
+  DatePicker,
+  Empty,
   Form,
   Input,
-  Button,
+  Modal,
+  Popconfirm,
+  Row,
   Select,
+  Spin,
   Table,
+  Tag,
+  TimePicker,
+  Typography,
 } from "antd";
-import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
-import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import moment from "moment";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getAllMovies } from "../../api/movie";
 import {
   addShow,
@@ -22,352 +33,493 @@ import {
   updateShow,
 } from "../../api/show";
 import { toast } from "../../feedback/toast";
-import moment from "moment";
+import { UiButton } from "../../components/ui";
+import { theme as cinematicTheme } from "../../styles/theme";
 
-const ShowModal = ({
+dayjs.extend(customParseFormat);
+
+const { Text, Title } = Typography;
+
+/** Browse screenings vs dedicated schedule/edit panel — avoids one overloaded modal view. */
+function ShowModal({
   isShowModalOpen,
   setIsShowModalOpen,
   selectedTheatre,
-}) => {
-  const [view, setView] = useState("table");
-  const [movies, setMovies] = useState(null);
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [shows, setShows] = useState(null);
-  const [selectedShow, setSelectedShow] = useState(null);
+}) {
+  const [panel, setPanel] = useState("list");
+  const [scheduleMode, setScheduleMode] = useState("create");
+  const [editingShow, setEditingShow] = useState(null);
+  const [shows, setShows] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const getData = async () => {
+  const fetchCatalogAndShows = useCallback(async () => {
+    if (!selectedTheatre?._id) return;
+    setLoading(true);
     try {
       const movieResponse = await getAllMovies();
-      if (movieResponse.success) {
+      if (movieResponse?.success && Array.isArray(movieResponse.data)) {
+        setMovies(movieResponse.data);
+      } else if (Array.isArray(movieResponse?.data)) {
         setMovies(movieResponse.data);
       } else {
-        toast.error(movieResponse.message);
+        setMovies([]);
+        if (movieResponse?.success === false && movieResponse?.message) {
+          toast.error(movieResponse.message);
+        }
       }
+
       const showResponse = await getShowsByTheatre({
         theatreId: selectedTheatre._id,
       });
-      if (showResponse.success) {
+      if (showResponse.success && Array.isArray(showResponse.data)) {
         setShows(showResponse.data);
       } else {
-        toast.error(showResponse.message);
+        setShows([]);
+        if (showResponse?.success === false && showResponse?.message) {
+          toast.error(showResponse.message);
+        }
       }
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err?.message || "Could not load shows.");
+      setShows([]);
+      setMovies([]);
+    } finally {
+      setLoading(false);
     }
+  }, [selectedTheatre?._id]);
+
+  useEffect(() => {
+    if (!isShowModalOpen || !selectedTheatre) return;
+    setPanel("list");
+    setEditingShow(null);
+    setScheduleMode("create");
+    fetchCatalogAndShows();
+  }, [isShowModalOpen, selectedTheatre, fetchCatalogAndShows]);
+
+  const handleClose = () => {
+    setIsShowModalOpen(false);
+    setPanel("list");
+    setEditingShow(null);
   };
-  const onFinish = async (values) => {
+
+  const openCreate = () => {
+    setScheduleMode("create");
+    setEditingShow(null);
+    setPanel("form");
+  };
+
+  const openEdit = (record) => {
+    setScheduleMode("edit");
+    setEditingShow(record);
+    setPanel("form");
+  };
+
+  const backToList = () => {
+    setPanel("list");
+    setEditingShow(null);
+  };
+
+  const handleDelete = useCallback(
+    async (showId) => {
+      try {
+        const response = await deleteShow({ showId });
+        if (response.success) {
+          toast.success(response.message);
+          fetchCatalogAndShows();
+        }
+      } catch {
+        /* interceptors */
+      }
+    },
+    [fetchCatalogAndShows],
+  );
+
+  const formInitialValues = useMemo(() => {
+    if (scheduleMode !== "edit" || !editingShow) return undefined;
+    const timeRaw = editingShow.time;
+    const timeParsed =
+      typeof timeRaw === "string"
+        ? dayjs(timeRaw, "HH:mm")
+        : dayjs(timeRaw);
+    return {
+      name: editingShow.name,
+      date: dayjs(editingShow.date),
+      time: timeParsed.isValid() ? timeParsed : undefined,
+      movie: editingShow.movie?._id,
+      ticketPrice: editingShow.ticketPrice,
+      totalSeats: editingShow.totalSeats,
+    };
+  }, [scheduleMode, editingShow]);
+
+  const formKey = `${scheduleMode}-${editingShow?._id ?? "new"}`;
+
+  const onFinishSchedule = async (values) => {
     try {
+      const payload = {
+        name: values.name,
+        date: values.date.format("YYYY-MM-DD"),
+        time: values.time.format("HH:mm"),
+        movie: values.movie,
+        ticketPrice: Number(values.ticketPrice),
+        totalSeats: Number(values.totalSeats),
+        theatre: selectedTheatre._id,
+      };
+
       let response = null;
-      if (view === "form") {
-        response = await addShow({ ...values, theatre: selectedTheatre._id });
+      if (scheduleMode === "create") {
+        response = await addShow(payload);
       } else {
-        // console.log(view, selectedTheatre, selectedTheatre._id);
         response = await updateShow({
-          ...values,
-          showId: selectedShow._id,
-          theatre: selectedTheatre._id,
+          ...payload,
+          showId: editingShow._id,
         });
       }
-      if (response.success) {
-        getData();
+
+      if (response?.success) {
         toast.success(response.message);
-        setView("table");
+        await fetchCatalogAndShows();
+        backToList();
       }
-    } catch (err) {
-      // Errors surfaced by axios interceptors.
+    } catch {
+      /* interceptors */
     }
   };
-  const handleCancel = () => {
-    setIsShowModalOpen(false);
-  };
-  const handleDelete = async (showId) => {
-    try {
-      const response = await deleteShow({ showId: showId });
-      if (response.success) {
-        toast.success(response.message);
-        getData();
-      }
-    } catch (err) {
-      // Errors surfaced by axios interceptors.
-    }
-  };
+
   const columns = [
-    {
-      title: "Show Name",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Show Date",
-      dataIndex: "date",
-      render: (text, data) => {
-        return moment(text).format("MMM Do YYYY");
+      {
+        title: "Show",
+        dataIndex: "name",
+        key: "name",
+        ellipsis: true,
+        render: (text) => (
+          <span className="font-semibold text-white">{text}</span>
+        ),
       },
-    },
-    {
-      title: "Show Time",
-      dataIndex: "time",
-      render: (text, data) => {
-        return moment(text, "HH:mm").format("hh:mm A");
+      {
+        title: "Date",
+        dataIndex: "date",
+        key: "date",
+        width: 132,
+        render: (text) =>
+          text ? moment(text).format("MMM D, YYYY") : "—",
       },
-    },
-    {
-      title: "Movie",
-      dataIndex: "movie",
-      render: (text, data) => {
-        return data.movie.movieName;
+      {
+        title: "Time",
+        dataIndex: "time",
+        key: "time",
+        width: 100,
+        render: (text) =>
+          text ? moment(text, "HH:mm").format("hh:mm A") : "—",
       },
-    },
-    {
-      title: "Ticket Price",
-      dataIndex: "ticketPrice",
-      key: "ticketPrice",
-    },
-    {
-      title: "Total Seats",
-      dataIndex: "totalSeats",
-      key: "totalSeats",
-    },
-    {
-      title: "Available Seats",
-      dataIndex: "seats",
-      render: (text, data) => {
-        return data.totalSeats - data.bookedSeats.length;
+      {
+        title: "Movie",
+        key: "movie",
+        ellipsis: true,
+        render: (_, row) => row.movie?.movieName ?? "—",
       },
-    },
-    {
-      title: "Action",
-      dataIndex: "action",
-      render: (text, data) => {
-        return (
-          <div className="d-flex align-items-center gap-10">
-            <Button
-              onClick={() => {
-                setView("edit");
-                setSelectedMovie(data.movie);
-                setSelectedShow({
-                  ...data,
-                  date: moment(data.date).format("YYYY-MM-DD"),
-                  movie: data.movie._id,
-                });
-                console.log(selectedMovie && selectedMovie.title);
-              }}
+      {
+        title: "Price",
+        dataIndex: "ticketPrice",
+        key: "ticketPrice",
+        width: 88,
+      },
+      {
+        title: "Seats",
+        key: "seats",
+        width: 88,
+        render: (_, row) => row.totalSeats ?? "—",
+      },
+      {
+        title: "Available",
+        key: "avail",
+        width: 96,
+        render: (_, row) => {
+          const booked = Array.isArray(row.bookedSeats)
+            ? row.bookedSeats.length
+            : 0;
+          const total = row.totalSeats ?? 0;
+          return Math.max(0, total - booked);
+        },
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        width: 140,
+        fixed: "right",
+        render: (_, row) => (
+          <div className="flex flex-wrap gap-2">
+            <UiButton
+              variant="secondary"
+              size="middle"
+              icon={<EditOutlined />}
+              aria-label={`Edit ${row.name}`}
+              onClick={() => openEdit(row)}
+            />
+            <Popconfirm
+              title="Remove this screening?"
+              description="Customers will no longer see this showtime."
+              okText="Remove"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => handleDelete(row._id)}
             >
-              <EditOutlined />
-            </Button>
-            <Button onClick={() => handleDelete(data._id)}>
-              <DeleteOutlined />
-            </Button>
-            {data.isActive && (
-              <Button
-                onClick={() => {
-                  setIsShowModalOpen(true);
-                }}
-              >
-                + Shows
-              </Button>
-            )}
+              <UiButton
+                variant="secondary"
+                danger
+                size="middle"
+                icon={<DeleteOutlined />}
+                aria-label={`Delete ${row.name}`}
+              />
+            </Popconfirm>
           </div>
-        );
+        ),
       },
-    },
-  ];
-  useEffect(() => {
-    getData();
-  }, []);
+    ];
+
+  const modalTitle = (
+    <div className="pr-8">
+      <div className="flex flex-wrap items-center gap-2">
+        <CalendarOutlined style={{ color: cinematicTheme.colors.primary }} />
+        <span className="text-lg font-semibold text-white">
+          {selectedTheatre?.name}
+        </span>
+        <Tag
+          className="!m-0 border-0 text-xs font-semibold uppercase tracking-wide"
+          style={{
+            background: cinematicTheme.colors.elevated,
+            color: cinematicTheme.colors.textSecondary,
+          }}
+        >
+          Screenings
+        </Tag>
+      </div>
+      {selectedTheatre?.address ? (
+        <Text type="secondary" className="mt-1 block text-sm">
+          {selectedTheatre.address}
+        </Text>
+      ) : null}
+    </div>
+  );
+
+  const disablePastDates =
+    scheduleMode === "create"
+      ? (current) =>
+          current && current < dayjs().startOf("day")
+      : undefined;
+
   return (
     <Modal
       centered
-      title={selectedTheatre.name}
+      destroyOnClose
+      title={modalTitle}
       open={isShowModalOpen}
-      onCancel={handleCancel}
-      width={1200}
+      onCancel={handleClose}
+      width={1080}
       footer={null}
+      classNames={{ body: "!max-h-[min(82vh,760px)] !overflow-y-auto !pt-2" }}
     >
-      <div className="d-flex justify-content-between">
-        <h3>
-          {view === "table"
-            ? "List of Shows"
-            : view === "form"
-            ? "Add Show"
-            : "Edit Show"}
-        </h3>
-        {view === "table" && (
-          <Button type="primary" onClick={() => setView("form")}>
-            Add Show
-          </Button>
-        )}
-      </div>
-      {view === "table" && <Table dataSource={shows} columns={columns} />}
-      {(view === "form" || view === "edit") && (
-        <Form
-          className=""
-          layout="vertical"
-          style={{ width: "100%" }}
-          initialValues={view === "edit" ? selectedShow : null}
-          onFinish={onFinish}
-        >
-          <Row
-            gutter={{
-              xs: 6,
-              sm: 10,
-              md: 12,
-              lg: 16,
-            }}
-          >
-            <Col span={24}>
-              <Row
-                gutter={{
-                  xs: 6,
-                  sm: 10,
-                  md: 12,
-                  lg: 16,
+      {panel === "list" ? (
+        <>
+          <div className="mb-6 flex flex-col gap-3 border-b border-[#2a2a2a] pb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <Title level={5} className="!mb-1 !mt-0 !text-white">
+                Scheduled shows
+              </Title>
+              <Text type="secondary" className="text-sm">
+                Review what&apos;s live, then add or edit screenings.
+              </Text>
+            </div>
+            <UiButton
+              variant="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={openCreate}
+            >
+              Schedule new show
+            </UiButton>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Spin size="large" />
+            </div>
+          ) : (
+            <div className="min-w-0 overflow-x-auto">
+              <Table
+                dataSource={shows}
+                columns={columns}
+                rowKey={(row) => row._id}
+                scroll={{ x: 900 }}
+                pagination={
+                  shows.length > 8
+                    ? { pageSize: 8, showSizeChanger: false }
+                    : false
+                }
+                locale={{
+                  emptyText: (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      styles={{
+                        description: {
+                          color: cinematicTheme.colors.textSecondary,
+                        },
+                      }}
+                      description="No showtimes yet. Use “Schedule new show” to publish your first screening."
+                    />
+                  ),
                 }}
-              >
-                <Col span={8}>
+              />
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#2a2a2a] pb-4">
+            <UiButton
+              variant="secondary"
+              size="large"
+              icon={<ArrowLeftOutlined />}
+              onClick={backToList}
+            >
+              Back to list
+            </UiButton>
+            <Title level={5} className="!mb-0 !text-white">
+              {scheduleMode === "create"
+                ? "Schedule new show"
+                : "Edit screening"}
+            </Title>
+          </div>
+
+          {loading && movies.length === 0 ? (
+            <div className="flex justify-center py-12">
+              <Spin />
+            </div>
+          ) : (
+            <Form
+              key={formKey}
+              layout="vertical"
+              initialValues={formInitialValues}
+              onFinish={onFinishSchedule}
+              requiredMark={false}
+            >
+              <Row gutter={[16, 8]}>
+                <Col xs={24} md={8}>
                   <Form.Item
-                    label="Show Name"
-                    htmlFor="name"
+                    label="Show name"
                     name="name"
-                    className="d-block"
-                    rules={[
-                      { required: true, message: "Show name is required!" },
-                    ]}
+                    rules={[{ required: true, message: "Show name is required" }]}
                   >
                     <Input
-                      id="name"
-                      type="text"
-                      placeholder="Enter the show name"
-                    ></Input>
+                      size="large"
+                      placeholder="e.g. Evening show"
+                    />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} md={8}>
                   <Form.Item
-                    label="Show Date"
-                    htmlFor="date"
+                    label="Date"
                     name="date"
-                    className="d-block"
-                    rules={[
-                      { required: true, message: "Show date is required!" },
-                    ]}
+                    rules={[{ required: true, message: "Date is required" }]}
                   >
-                    <Input
-                      id="date"
-                      type="date"
-                      placeholder="Enter the show date"
-                    ></Input>
+                    <DatePicker
+                      size="large"
+                      className="w-full"
+                      format="YYYY-MM-DD"
+                      disabledDate={disablePastDates}
+                    />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} md={8}>
                   <Form.Item
-                    label="Show Timing"
-                    htmlFor="time"
+                    label="Start time"
                     name="time"
-                    className="d-block"
-                    rules={[
-                      { required: true, message: "Show time is required!" },
-                    ]}
+                    rules={[{ required: true, message: "Time is required" }]}
                   >
-                    <Input
-                      id="time"
-                      type="time"
-                      placeholder="Enter the show date"
-                    ></Input>
+                    <TimePicker
+                      size="large"
+                      className="w-full"
+                      format="HH:mm"
+                      minuteStep={5}
+                    />
                   </Form.Item>
                 </Col>
-              </Row>
-            </Col>
-            <Col span={24}>
-              <Row
-                gutter={{
-                  xs: 6,
-                  sm: 10,
-                  md: 12,
-                  lg: 16,
-                }}
-              >
-                <Col span={8}>
+                <Col xs={24} md={8}>
                   <Form.Item
-                    label="Select the Movie"
-                    htmlFor="movie"
+                    label="Movie"
                     name="movie"
-                    className="d-block"
-                    rules={[{ required: true, message: "Movie is required!" }]}
+                    rules={[{ required: true, message: "Pick a movie" }]}
                   >
                     <Select
-                      id="movie"
-                      placeholder="Select Movie"
-                      defaultValue={selectedMovie && selectedMovie.title}
-                      style={{ width: "100%", height: "45px" }}
-                      options={movies.map((movie) => ({
-                        key: movie._id,
-                        value: movie._id,
-                        label: movie.movieName,
+                      size="large"
+                      placeholder="Select from catalogue"
+                      showSearch
+                      optionFilterProp="label"
+                      options={movies.map((m) => ({
+                        value: m._id,
+                        label: m.movieName,
                       }))}
                     />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} md={8}>
                   <Form.Item
-                    label="Ticket Price"
-                    htmlFor="ticketPrice"
+                    label="Ticket price (₹)"
                     name="ticketPrice"
-                    className="d-block"
                     rules={[
-                      { required: true, message: "Ticket price is required!" },
+                      { required: true, message: "Ticket price is required" },
                     ]}
                   >
                     <Input
-                      id="ticketPrice"
+                      size="large"
                       type="number"
-                      placeholder="Enter the ticket price"
-                    ></Input>
+                      min={0}
+                      placeholder="Per seat"
+                    />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} md={8}>
                   <Form.Item
-                    label="Total Seats"
-                    htmlFor="totalSeats"
+                    label="Total seats"
                     name="totalSeats"
-                    className="d-block"
                     rules={[
-                      { required: true, message: "Total seats are required!" },
+                      { required: true, message: "Seat count is required" },
                     ]}
                   >
                     <Input
-                      id="totalSeats"
+                      size="large"
                       type="number"
-                      placeholder="Enter the number of total seats"
-                    ></Input>
+                      min={1}
+                      placeholder="Venue capacity"
+                    />
                   </Form.Item>
                 </Col>
               </Row>
-            </Col>
-          </Row>
-          <div className="d-flex gap-10">
-            <Button
-              className=""
-              block
-              onClick={() => {
-                setView("table");
-              }}
-              htmlType="button"
-            >
-              <ArrowLeftOutlined /> Go Back
-            </Button>
-            <Button
-              block
-              type="primary"
-              htmlType="submit"
-              style={{ fontSize: "1rem", fontWeight: "600" }}
-            >
-              {view === "form" ? "Add the Show" : "Edit the Show"}
-            </Button>
-          </div>
-        </Form>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <UiButton
+                  size="large"
+                  className="order-2 sm:order-1 sm:min-w-[120px]"
+                  onClick={backToList}
+                >
+                  Cancel
+                </UiButton>
+                <UiButton
+                  variant="primary"
+                  size="large"
+                  htmlType="submit"
+                  className="order-1 sm:order-2 sm:min-w-[180px]"
+                >
+                  {scheduleMode === "create"
+                    ? "Publish showtime"
+                    : "Save changes"}
+                </UiButton>
+              </div>
+            </Form>
+          )}
+        </>
       )}
     </Modal>
   );
-};
+}
 
 export default ShowModal;

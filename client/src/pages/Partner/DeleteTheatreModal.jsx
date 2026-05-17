@@ -1,15 +1,20 @@
-import { Modal } from "antd";
+import { Modal, Typography } from "antd";
 import { deleteTheatre } from "../../api/theatre";
 import { toast } from "../../feedback/toast";
+import { theme as cinematicTheme } from "../../styles/theme";
 
-const DeleteTheatreModal = ({
+const { Text, Paragraph } = Typography;
+
+function DeleteTheatreModal({
   isDeleteModalOpen,
   setIsDeleteModalOpen,
   selectedTheatre,
   setSelectedTheatre,
   getData,
-}) => {
-  const handleOK = async () => {
+}) {
+  const name = selectedTheatre?.name ?? "this theatre";
+
+  const handleOk = async () => {
     try {
       const theatreId = selectedTheatre._id;
       const response = await deleteTheatre(theatreId);
@@ -19,25 +24,40 @@ const DeleteTheatreModal = ({
         setIsDeleteModalOpen(false);
       }
       setSelectedTheatre(null);
-    } catch (err) {
+    } catch {
       setIsDeleteModalOpen(false);
     }
   };
+
   const handleCancel = () => {
     setIsDeleteModalOpen(false);
     setSelectedTheatre(null);
   };
+
   return (
     <Modal
       centered
-      title="Delete Theatre?"
+      title={
+        <span className="text-lg font-semibold text-white">Remove theatre</span>
+      }
       open={isDeleteModalOpen}
-      onOk={handleOK}
+      okText="Delete"
+      okButtonProps={{ danger: true }}
+      onOk={handleOk}
       onCancel={handleCancel}
     >
-      <p>Are you sure you want to delete this theatre?</p>
+      <Paragraph className="!mb-1 !mt-2 text-[#E8E8E8]">
+        Delete{" "}
+        <Text strong style={{ color: cinematicTheme.colors.primary }}>
+          {name}
+        </Text>
+        ? Shows tied to this venue may also be affected on the server.
+      </Paragraph>
+      <Text type="secondary" className="text-sm">
+        This cannot be undone from the dashboard.
+      </Text>
     </Modal>
   );
-};
+}
 
 export default DeleteTheatreModal;
