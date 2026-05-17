@@ -96,69 +96,68 @@ const BookShow = () => {
           />
         </div>
 
-        <div className="mx-auto flex w-full max-w-[960px] flex-col items-center gap-2">
-          {Array.from({ length: rows }, (_, rowIdx) => {
-            const seatsThisRow = Math.min(
-              columns,
-              seatCapacity - rowIdx * columns,
-            );
-            if (seatsThisRow <= 0) return null;
+        <div className="flex w-full justify-center px-2">
+          <div className="flex flex-col items-center gap-2">
+            {Array.from({ length: rows }, (_, rowIdx) => {
+              const seatsThisRow = Math.min(
+                columns,
+                seatCapacity - rowIdx * columns,
+              );
+              if (seatsThisRow <= 0) return null;
 
-            return (
-              <div
-                key={rowIdx}
-                className="flex max-w-full justify-center gap-2"
-              >
-                {Array.from({ length: seatsThisRow }, (_, i) => {
-                  const seatNumber = rowIdx * columns + i + 1;
+              return (
+                <div key={rowIdx} className="flex justify-center gap-2">
+                  {Array.from({ length: seatsThisRow }, (_, i) => {
+                    const seatNumber = rowIdx * columns + i + 1;
 
-                  const booked = bookedSeatSet.has(seatNumber);
-                  const selected = selectedSeats.includes(seatNumber);
+                    const booked = bookedSeatSet.has(seatNumber);
+                    const selected = selectedSeats.includes(seatNumber);
 
-                  let bg = cinematicTheme.colors.backgroundSecondary;
-                  let border = "#444444";
-                  let textCls = "text-white";
+                    let bg = cinematicTheme.colors.backgroundSecondary;
+                    let border = "#444444";
+                    let textCls = "text-white";
 
-                  if (booked) {
-                    bg = "#2a2a2a";
-                    border = "#3d3d3d";
-                    textCls = "text-[#808080]";
-                  } else if (selected) {
-                    bg = cinematicTheme.colors.success;
-                    border = cinematicTheme.colors.success;
-                    textCls = "text-[#0f0f0f]";
-                  }
+                    if (booked) {
+                      bg = "#2a2a2a";
+                      border = "#3d3d3d";
+                      textCls = "text-[#808080]";
+                    } else if (selected) {
+                      bg = cinematicTheme.colors.success;
+                      border = cinematicTheme.colors.success;
+                      textCls = "text-[#0f0f0f]";
+                    }
 
-                  return (
-                    <div key={seatNumber}>
-                      <button
-                        type="button"
-                        disabled={booked}
-                        className={`flex h-9 w-10 items-center justify-center rounded-lg border text-sm font-semibold transition-colors ${textCls} ${
-                          booked
-                            ? "cursor-not-allowed opacity-70"
-                            : "cursor-pointer hover:brightness-110"
-                        }`}
-                        style={{ backgroundColor: bg, borderColor: border }}
-                        onClick={() => {
-                          if (booked) return;
-                          if (selected) {
-                            setSelectedSeats(
-                              selectedSeats.filter((s) => s !== seatNumber),
-                            );
-                          } else {
-                            setSelectedSeats([...selectedSeats, seatNumber]);
-                          }
-                        }}
-                      >
-                        {seatNumber}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
+                    return (
+                      <div key={seatNumber}>
+                        <button
+                          type="button"
+                          disabled={booked}
+                          className={`flex h-9 w-10 items-center justify-center rounded-lg border text-sm font-semibold transition-colors ${textCls} ${
+                            booked
+                              ? "cursor-not-allowed opacity-70"
+                              : "cursor-pointer hover:brightness-110"
+                          }`}
+                          style={{ backgroundColor: bg, borderColor: border }}
+                          onClick={() => {
+                            if (booked) return;
+                            if (selected) {
+                              setSelectedSeats(
+                                selectedSeats.filter((s) => s !== seatNumber),
+                              );
+                            } else {
+                              setSelectedSeats([...selectedSeats, seatNumber]);
+                            }
+                          }}
+                        >
+                          {seatNumber}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div
@@ -195,7 +194,7 @@ const BookShow = () => {
         ← Back to movie
       </UiButton>
 
-      <SurfaceCard className="!overflow-hidden !p-0">
+      <SurfaceCard className="!overflow-x-visible !overflow-y-visible !p-0">
         <div
           className="border-b px-6 py-6 sm:px-8"
           style={{ borderColor: cinematicTheme.colors.elevated }}
