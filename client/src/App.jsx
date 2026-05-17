@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Admin from "./pages/Admin";
 import Profile from "./pages/User";
+import MyBookings from "./pages/User/MyBookings";
 import Partner from "./pages/Partner";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SingleMovie from "./pages/Home/SingleMovie";
@@ -47,6 +48,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={ROLE_USER_AREA}>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings"
+            element={
+              <ProtectedRoute allowedRoles={ROLE_USER_AREA}>
+                <MyBookings />
               </ProtectedRoute>
             }
           />

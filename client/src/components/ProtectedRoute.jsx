@@ -81,6 +81,10 @@ function ProtectedRoute({ children, allowedRoles }) {
         navigate(getDashboardPath(user.role));
         return;
       }
+      if (key === "bookings") {
+        navigate("/bookings");
+        return;
+      }
       if (key === "logout") {
         localStorage.removeItem("token");
         navigate("/login");
