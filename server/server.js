@@ -4,6 +4,11 @@ const app = express();
 require("dotenv").config(); // Load environment variables
 
 const connectDB = require("./config/db"); // Import database configuration
+const {
+  applySecurityMiddleware,
+  applyBodySanitization,
+  authRateLimiter,
+} = require("./middlewares/securityMiddleware");
 const userRouter = require("./routes/userRoutes"); // Import user routes
 const movieRouter = require("./routes/movieRoutes");
 const theatreRouter = require("./routes/theatreRoutes");
@@ -12,9 +17,12 @@ const bookingRouter = require("./routes/bookingRoutes");
 
 console.log("server", process.env.DB_URL);
 
+applySecurityMiddleware(app);
+
 /** Routes */
 app.use(express.json());
-app.use("/api/users", userRouter);
+applyBodySanitization(app);
+app.use("/api/users", authRateLimiter, userRouter);
 app.use("/api/movies", movieRouter);
 app.use("/api/theatres", theatreRouter);
 app.use("/api/shows", showRouter);
