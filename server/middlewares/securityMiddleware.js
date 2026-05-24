@@ -1,7 +1,19 @@
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const mongoSanitize = require("express-mongo-sanitize");
+const { sanitize: sanitizeMongoKeys } = require("express-mongo-sanitize");
+
+const SANITIZE_OPTS = { replaceWith: "_" };
+
+/** Express 5: req.query is read-only — sanitize in place, never reassign. */
+function mongoSanitizeMiddleware(req, res, next) {
+  for (const key of ["body", "params", "query"]) {
+    if (req[key] && typeof req[key] === "object") {
+      sanitizeMongoKeys(req[key], SANITIZE_OPTS);
+    }
+  }
+  next();
+}
 
 function parseAllowedOrigins() {
   const raw = process.env.CLIENT_URL || process.env.CORS_ORIGIN || "";
@@ -60,11 +72,7 @@ function applySecurityMiddleware(app) {
 }
 
 function applyBodySanitization(app) {
-  app.use(
-    mongoSanitize({
-      replaceWith: "_",
-    }),
-  );
+  app.use(mongoSanitizeMiddleware);
 }
 
 module.exports = {

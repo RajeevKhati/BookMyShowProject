@@ -41,8 +41,10 @@ async function start() {
     await seedAdminUser({ strict: false });
   }
 
-  app.listen(3001, () => {
-    console.log("Server is Running");
+  const port = Number(process.env.PORT) || 3001;
+
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
   });
 }
 
