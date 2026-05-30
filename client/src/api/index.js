@@ -3,8 +3,10 @@ import { toast } from "../feedback/notify";
 import { hideLoading, showLoading } from "../redux/loaderSlice";
 import store from "../redux/store";
 
+const baseURL = import.meta.env.VITE_API_URL || "";
+
 export const axiosInstance = axios.create({
-  // baseURL: "http://localhost:3001",
+  baseURL,
   headers: {
     "Content-Type": "application/json",
   },
