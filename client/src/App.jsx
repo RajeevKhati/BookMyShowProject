@@ -11,6 +11,7 @@ import SingleMovie from "./pages/Home/SingleMovie";
 import BookShow from "./pages/Home/BookShow";
 import SuccessPage from "./pages/Home/SuccessPage";
 import ErrorPage from "./pages/Home/ErrorPage";
+import NotFound from "./pages/NotFound";
 import Forget from "./pages/User/ForgetPassword";
 import Reset from "./pages/User/ResetPassword";
 
@@ -85,6 +86,7 @@ function App() {
           />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/error" element={<ErrorPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </div>
