@@ -55,13 +55,14 @@ const apiRateLimiter = rateLimit({
 });
 
 const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    message: "Too many authentication attempts. Please try again later.",
+    message:
+      "Too many authentication attempts. Please try again after 1 minute.",
   },
 });
 

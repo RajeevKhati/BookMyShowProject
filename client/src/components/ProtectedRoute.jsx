@@ -1,10 +1,12 @@
 import PropTypes from "prop-types";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { GetCurrentUser } from "../api/user";
 import { toast } from "../feedback/toast";
-import { setUser } from "../redux/userSlice";
+import {
+  bootstrapSession,
+  clearSession,
+} from "../redux/userSlice";
 import AppShell from "./layout/AppShell";
 import {
   getDashboardPath,
@@ -22,49 +24,40 @@ function allowsRole(user, allowedRoles) {
 }
 
 function ProtectedRoute({ children, allowedRoles }) {
-  const { user } = useSelector((state) => state.user);
+  const { user, sessionStatus } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [sessionChecked, setSessionChecked] = useState(false);
-
   const canRender = allowsRole(user, allowedRoles);
 
-  const bootstrapSession = useCallback(async () => {
+  useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
-      setSessionChecked(true);
       return;
     }
-    try {
-      const payload = await GetCurrentUser();
 
-      const nextUser =
-        payload?.success && payload?.data != null ? payload.data : null;
-
-      if (nextUser) {
-        dispatch(setUser(nextUser));
-      } else {
-        throw new Error(
-          payload?.message ||
-            "Unable to restore your session. Please sign in again.",
-        );
-      }
-    } catch (error) {
-      dispatch(setUser(null));
-      navigate("/login");
-      toast.error(
-        error instanceof Error ? error.message : "Please sign in again.",
-      );
-    } finally {
-      setSessionChecked(true);
+    if (sessionStatus === "ready" || sessionStatus === "loading" || sessionStatus === "failed") {
+      return;
     }
-  }, [dispatch, navigate]);
 
-  useEffect(() => {
-    bootstrapSession();
-  }, [bootstrapSession]);
+    dispatch(bootstrapSession()).then((result) => {
+      if (!bootstrapSession.rejected.match(result) || result.meta?.condition) {
+        return;
+      }
+
+      const err = result.payload;
+      if (err?.code === "NO_TOKEN") {
+        navigate("/login");
+        return;
+      }
+
+      localStorage.removeItem("token");
+      dispatch(clearSession());
+      navigate("/login");
+      toast.error(err?.message || "Please sign in again.");
+    });
+  }, [dispatch, navigate, sessionStatus]);
 
   useEffect(() => {
     if (!user || !allowedRoles?.length) return;
@@ -95,13 +88,15 @@ function ProtectedRoute({ children, allowedRoles }) {
       }
       if (key === "logout") {
         localStorage.removeItem("token");
+        dispatch(clearSession());
         navigate("/login");
       }
     },
-    [navigate, user],
+    [dispatch, navigate, user],
   );
 
-  const renderChildren = sessionChecked && Boolean(user) && canRender;
+  const sessionReady = sessionStatus === "ready" && Boolean(user);
+  const renderChildren = sessionReady && canRender;
 
   if (!renderChildren) {
     return null;

@@ -1,8 +1,10 @@
 import React from "react";
 import { Form } from "antd";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { LoginUser } from "../api/user";
 import { toast } from "../feedback/toast";
+import { clearSession } from "../redux/userSlice";
 import {
   CenteredShell,
   InsetFooter,
@@ -14,11 +16,13 @@ import { theme as cinematicTheme } from "../styles/theme";
 
 function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const onFinish = async (values) => {
     try {
       const response = await LoginUser(values);
       if (response?.success) {
+        dispatch(clearSession());
         localStorage.setItem("token", response.data);
         toast.success(response.message);
         navigate("/");

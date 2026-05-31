@@ -29,7 +29,7 @@ bookingRouter.post(
         line_items: [
           {
             price_data: {
-              currency: "usd",
+              currency: "inr",
               product_data: {
                 name: "CineVault — Movie Ticket",
                 description: `${selectedSeats.length} seat(s) for Show ID: ${showId}`,
