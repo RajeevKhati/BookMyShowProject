@@ -11,8 +11,14 @@ function replaceContent(content, creds) {
 }
 
 /** Default subject when caller does not pass `mailMeta.subject`. */
-function defaultSubject() {
-  return "Mail from ScalerShows";
+function defaultSubject(templateName) {
+  if (templateName === "otp.html") {
+    return "CineVault — Your password reset code";
+  }
+  if (templateName === "ticketTemplate.html") {
+    return "CineVault — Your movie ticket is confirmed";
+  }
+  return "CineVault";
 }
 
 /**
@@ -45,7 +51,7 @@ async function buildMessageFromTemplate(
   );
   const raw = await fs.promises.readFile(templatePath, "utf-8");
   const html = replaceContent(raw, creds);
-  const subject = mailMeta.subject ?? defaultSubject();
+  const subject = mailMeta.subject ?? defaultSubject(templateName);
   const text = mailMeta.text ?? inferPlainText(creds);
   return { to: receiverEmail, subject, html, text };
 }

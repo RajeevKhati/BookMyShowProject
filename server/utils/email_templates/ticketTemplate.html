@@ -3,82 +3,374 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CineVault</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
-      }
-      .email-container {
-        max-width: 600px;
-        margin: 20px auto;
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      .header h1 {
-        font-size: 24px;
-        color: #333;
-      }
-      .ticket-details {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      .ticket-details h2 {
-        color: #333;
-        margin-bottom: 20px;
-        font-size: 22px;
-      }
-      .details {
-        list-style: none;
-        padding: 0;
-        width: 100%;
-      }
-      .details li {
-        margin: 10px 0;
-        color: #555;
-        display: flex;
-        justify-content: space-between;
-        padding: 5px 0;
-        border-bottom: 1px solid #ddd;
-      }
-      .details li span {
-        font-weight: bold;
-      }
-      .footer {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 12px;
-        color: #999;
-      }
-    </style>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Your ticket — CineVault</title>
   </head>
-  <body>
-    <div class="email-container">
-      <div class="header">
-        <h1>CineVault</h1>
-      </div>
-      <div class="ticket-details">
-        <h2>#{movie}</h2>
-        <ul class="details">
-          <li><span>Name:</span> <span>#{name}</span></li>
-          <li><span>Theatre:</span> <span>#{theatre}</span></li>
-          <li><span>Date:</span> <span>#{date}</span></li>
-          <li><span>Time:</span> <span>#{time}</span></li>
-          <li><span>Seats NOs:</span> <span>#{seats}</span></li>
-          <li><span>Amount:</span> <span>Rs. #{amount}</span></li>
-          <li><span>Transaction ID:</span> <span>#{transactionId}</span></li>
-        </ul>
-      </div>
-      <div class="footer">Enjoy your movie!</div>
-    </div>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      width: 100% !important;
+      background-color: #0f0f0f;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    "
+  >
+    <table
+      role="presentation"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      width="100%"
+      style="background-color: #0f0f0f"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table
+            role="presentation"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            width="100%"
+            style="max-width: 560px; border-collapse: separate"
+          >
+            <!-- Brand bar -->
+            <tr>
+              <td
+                style="
+                  height: 4px;
+                  background-color: #e50914;
+                  border-radius: 16px 16px 0 0;
+                  font-size: 0;
+                  line-height: 0;
+                "
+              >
+                &nbsp;
+              </td>
+            </tr>
+
+            <!-- Card -->
+            <tr>
+              <td
+                style="
+                  background-color: #1f1f1f;
+                  border: 1px solid #262626;
+                  border-top: none;
+                  border-radius: 0 0 16px 16px;
+                  padding: 40px 32px;
+                "
+              >
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                >
+                  <!-- Header -->
+                  <tr>
+                    <td align="center" style="padding-bottom: 8px">
+                      <p
+                        style="
+                          margin: 0 0 6px;
+                          font-size: 11px;
+                          font-weight: 700;
+                          letter-spacing: 0.14em;
+                          text-transform: uppercase;
+                          color: #e50914;
+                        "
+                      >
+                        CineVault
+                      </p>
+                      <h1
+                        style="
+                          margin: 0;
+                          font-size: 26px;
+                          font-weight: 700;
+                          line-height: 1.25;
+                          color: #ffffff;
+                        "
+                      >
+                        Booking confirmed
+                      </h1>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td align="center" style="padding-bottom: 28px">
+                      <p
+                        style="
+                          margin: 0;
+                          display: inline-block;
+                          font-size: 12px;
+                          font-weight: 600;
+                          letter-spacing: 0.06em;
+                          text-transform: uppercase;
+                          color: #22c55e;
+                          background-color: rgba(34, 197, 94, 0.12);
+                          border-radius: 999px;
+                          padding: 6px 14px;
+                        "
+                      >
+                        Payment successful
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Movie title -->
+                  <tr>
+                    <td align="center" style="padding-bottom: 28px">
+                      <h2
+                        style="
+                          margin: 0;
+                          font-size: 22px;
+                          font-weight: 700;
+                          line-height: 1.35;
+                          color: #ffffff;
+                        "
+                      >
+                        #{movie}
+                      </h2>
+                      <p
+                        style="
+                          margin: 8px 0 0;
+                          font-size: 15px;
+                          line-height: 1.5;
+                          color: #b3b3b3;
+                        "
+                      >
+                        Hi #{name}, your seats are reserved. See you at the show!
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Ticket details -->
+                  <tr>
+                    <td style="padding-bottom: 24px">
+                      <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        width="100%"
+                        style="
+                          background-color: #181818;
+                          border: 1px solid #262626;
+                          border-radius: 12px;
+                          overflow: hidden;
+                        "
+                      >
+                        <tr>
+                          <td
+                            colspan="2"
+                            style="
+                              padding: 14px 20px;
+                              background-color: #262626;
+                              border-bottom: 1px solid #333333;
+                            "
+                          >
+                            <p
+                              style="
+                                margin: 0;
+                                font-size: 11px;
+                                font-weight: 700;
+                                letter-spacing: 0.12em;
+                                text-transform: uppercase;
+                                color: #808080;
+                              "
+                            >
+                              Ticket details
+                            </p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              color: #808080;
+                              border-bottom: 1px solid #262626;
+                              width: 38%;
+                            "
+                          >
+                            Theatre
+                          </td>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              font-weight: 600;
+                              color: #ffffff;
+                              text-align: right;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            #{theatre}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              color: #808080;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            Date
+                          </td>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              font-weight: 600;
+                              color: #ffffff;
+                              text-align: right;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            #{date}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              color: #808080;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            Time
+                          </td>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              font-weight: 600;
+                              color: #ffffff;
+                              text-align: right;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            #{time}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              color: #808080;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            Seats
+                          </td>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              font-weight: 600;
+                              color: #ffffff;
+                              text-align: right;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            #{seats}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              color: #808080;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            Amount paid
+                          </td>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 16px;
+                              font-weight: 700;
+                              color: #e50914;
+                              text-align: right;
+                              border-bottom: 1px solid #262626;
+                            "
+                          >
+                            ₹#{amount}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 14px;
+                              color: #808080;
+                            "
+                          >
+                            Transaction ID
+                          </td>
+                          <td
+                            style="
+                              padding: 14px 20px;
+                              font-size: 12px;
+                              font-weight: 600;
+                              color: #b3b3b3;
+                              text-align: right;
+                              word-break: break-all;
+                              font-family: 'Courier New', Courier, monospace;
+                            "
+                          >
+                            #{transactionId}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- CTA note -->
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        background-color: #181818;
+                        border-radius: 10px;
+                        padding: 18px 20px;
+                      "
+                    >
+                      <p
+                        style="
+                          margin: 0;
+                          font-size: 15px;
+                          line-height: 1.55;
+                          color: #b3b3b3;
+                        "
+                      >
+                        Present this email at the theatre entrance or keep it
+                        handy on your phone. Enjoy the movie!
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="padding: 24px 8px 0">
+                <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #555555">
+                  © CineVault · Movie tickets, made simple
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
