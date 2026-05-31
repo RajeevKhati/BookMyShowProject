@@ -173,10 +173,22 @@ const resetPassword = async function (req, res) {
       });
     }
     // OTP window still valid?
+    if (!user.otp || !user.otpExpiry) {
+      return res.status(401).json({
+        status: "failure",
+        message: "No active reset request. Please request a new code.",
+      });
+    }
     if (Date.now() > user.otpExpiry) {
       return res.status(401).json({
         status: "failure",
         message: "otp expired",
+      });
+    }
+    if (String(user.otp) !== String(resetDetails.otp).trim()) {
+      return res.status(401).json({
+        status: "failure",
+        message: "Invalid verification code",
       });
     }
     user.password = await bcrypt.hash(req.body.password, SALT_ROUNDS);

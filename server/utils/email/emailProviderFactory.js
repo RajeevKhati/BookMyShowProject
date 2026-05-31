@@ -2,19 +2,23 @@
  * Factory + singleton: picks implementation (Strategy) once per process.
  *
  * Selection order:
- *   1. EMAIL_PROVIDER=resend | sendgrid (explicit)
+ *   1. EMAIL_PROVIDER=gmail | resend | sendgrid | smtp (explicit)
  *   2. If unset: RESEND_API_KEY → Resend
  *   3. Else: SENDGRID_API_KEY → SendGrid + Nodemailer
+ *   4. Else: GMAIL_USER + GMAIL_APP_PASSWORD → Gmail + Nodemailer
  */
 const SendGridNodemailerProvider = require("./providers/sendGridNodemailerProvider");
 const ResendEmailProvider = require("./providers/resendEmailProvider");
+const GmailNodemailerProvider = require("./providers/gmailNodemailerProvider");
 
 function resolveProviderType() {
   const explicit = (process.env.EMAIL_PROVIDER || "").toLowerCase().trim();
+  if (explicit === "gmail") return "gmail";
   if (explicit === "sendgrid" || explicit === "smtp") return "sendgrid";
   if (explicit === "resend") return "resend";
   if (process.env.RESEND_API_KEY) return "resend";
   if (process.env.SENDGRID_API_KEY) return "sendgrid";
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) return "gmail";
   return null;
 }
 
@@ -46,8 +50,13 @@ function getEmailProvider() {
     return singleton;
   }
 
+  if (type === "gmail") {
+    singleton = new GmailNodemailerProvider();
+    return singleton;
+  }
+
   throw new Error(
-    "No email provider configured. Set RESEND_API_KEY or SENDGRID_API_KEY, or EMAIL_PROVIDER=resend|sendgrid."
+    "No email provider configured. Set RESEND_API_KEY, SENDGRID_API_KEY, or GMAIL_USER + GMAIL_APP_PASSWORD, or EMAIL_PROVIDER=gmail|resend|sendgrid."
   );
 }
 

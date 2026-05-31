@@ -2,6 +2,7 @@ const bookingRouter = require("express").Router();
 const authMiddleware = require("../middlewares/authMiddleware");
 const Booking = require("../models/bookingModel");
 const Show = require("../models/showModel");
+const User = require("../models/userModel");
 const emailHelper = require("../utils/emailHelper");
 
 const BOOKING_POPULATE = [
@@ -78,6 +79,26 @@ function getStripe() {
   return stripeClient;
 }
 
+/** Reuse Stripe Customer so Checkout skips email collection for logged-in users. */
+async function getOrCreateStripeCustomer(stripe, user) {
+  const existing = await stripe.customers.list({
+    email: user.email,
+    limit: 1,
+  });
+
+  if (existing.data.length > 0) {
+    return existing.data[0].id;
+  }
+
+  const customer = await stripe.customers.create({
+    email: user.email,
+    name: user.name,
+    metadata: { userId: String(user._id) },
+  });
+
+  return customer.id;
+}
+
 bookingRouter.post(
   "/create-checkout-session",
   authMiddleware,
@@ -85,7 +106,19 @@ bookingRouter.post(
     try {
       const { selectedSeats, showId, ticketPrice } = req.body;
 
-      const session = await getStripe().checkout.sessions.create({
+      const user = await User.findById(req.userId).select("email name");
+      if (!user?.email) {
+        return res.status(400).send({
+          success: false,
+          message: "User email not found. Cannot start checkout.",
+        });
+      }
+
+      const stripe = getStripe();
+      const customerId = await getOrCreateStripeCustomer(stripe, user);
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
         payment_method_types: ["card"],
         line_items: [
           {

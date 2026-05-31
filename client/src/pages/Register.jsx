@@ -1,6 +1,6 @@
 import React from "react";
 import { Form, Radio } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { RegisterUser } from "../api/user";
 import { toast } from "../feedback/toast";
 import {
@@ -17,11 +17,14 @@ import {
 import { theme as cinematicTheme } from "../styles/theme";
 
 function Register() {
+  const navigate = useNavigate();
+
   const onFinish = async (values) => {
     try {
       const response = await RegisterUser(values);
       if (response.success) {
         toast.success(response.message);
+        navigate("/login");
       }
     } catch {
       // Register failures: toast via axios interceptors.
