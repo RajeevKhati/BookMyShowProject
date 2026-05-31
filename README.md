@@ -2,16 +2,38 @@
 
 Full-stack movie ticketing app: browse movies, pick showtimes, select seats, pay via **Stripe Checkout**, and receive ticket emails. Supports **admin**, **partner**, and **user** roles.
 
+---
+
+## Live demo
+
+| | |
+|---|---|
+| **App (login)** | **[https://thisiscinevault.netlify.app/login](https://thisiscinevault.netlify.app/login)** |
+| **Admin email** | `admin@mail.com` |
+| **Admin password** | `admin` |
+
+> Use the admin credentials above to sign in and access the admin dashboard (movies, theatre approval).
+
+### Where it’s deployed
+
+| Layer | Platform |
+|-------|----------|
+| **Frontend** | [Netlify](https://www.netlify.com/) |
+| **Backend API** | [Render](https://render.com/) |
+| **Database** | [MongoDB Atlas](https://www.mongodb.com/atlas) |
+
+---
+
 ## Tech stack
 
 | Layer | Technologies |
 |-------|----------------|
 | **Frontend** | React 19, Vite 6, React Router 7, Redux Toolkit, Ant Design 5, Tailwind CSS 4, Axios, Day.js |
 | **Backend** | Node.js 22, Express 5, Mongoose 8, JWT, bcryptjs |
-| **Database** | MongoDB |
+| **Database** | MongoDB (Atlas in production) |
 | **Payments** | Stripe Checkout (INR) |
 | **Email** | Strategy pattern — Gmail, Resend, or SendGrid via Nodemailer (HTML templates) |
-| **Deploy** | Netlify (client), Render (server) |
+| **Deploy** | Netlify · Render · MongoDB Atlas |
 
 ## Features
 
@@ -122,12 +144,15 @@ EMAIL_FROM="CineVault" <you@gmail.com>
 CORS_ORIGIN=http://localhost:5173
 ```
 
-## Deployment
+## Deployment (local setup)
+
+Production uses **Netlify** (frontend), **Render** (backend), and **MongoDB Atlas** (database). See [Live demo](#live-demo) above.
 
 | App | Host | Notes |
 |-----|------|-------|
 | **Client** | Netlify | Base dir: `client`, build: `npm run build`, publish: `dist`, set `VITE_API_URL` |
 | **Server** | Render | Root: `server`, Node 22, set env vars, `CLIENT_URL` = Netlify URL |
+| **Database** | MongoDB Atlas | Connection string in `DB_URL` on Render |
 
 SPA routing: `client/public/_redirects` → `/* /index.html 200`
 
